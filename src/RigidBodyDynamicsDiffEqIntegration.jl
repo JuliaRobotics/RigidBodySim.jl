@@ -24,19 +24,19 @@ function DiffEqBase.ODEProblem(state::MechanismState{X, M, C}, tspan, control! =
 
     closed_loop_dynamics! = function (t, x, ẋ)
         # TODO: unpack function in RigidBodyDynamics:
-            q̇ = view(ẋ, 1 : nq)
-            v̇ = view(ẋ, nq + 1 : nq + nv)
-            ṡ = view(ẋ, nq + nv + 1 : nq + nv + ns)
+        q̇ = view(ẋ, 1 : nq)
+        v̇ = view(ẋ, nq + 1 : nq + nv)
+        ṡ = view(ẋ, nq + nv + 1 : nq + nv + ns)
 
         set!(state, x)
         control!(τ, t, state)
         dynamics!(result, state, τ)
 
         configuration_derivative!(q̇, state)
-            v̇ .= result.v̇
-            ṡ .= result.ṡ
+        v̇ .= result.v̇
+        ṡ .= result.ṡ
 
-            ẋ
+        ẋ
     end
 
     DiffEqBase.ODEProblem(closed_loop_dynamics!, x, tspan)
