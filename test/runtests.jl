@@ -36,3 +36,18 @@ end
     vis_callback = VisualizerCallback(state, vis)
     sol = solve(problem, RK4(), adaptive = false, dt = 1e-4, callback = vis_callback)
 end
+
+@testset "renormalization callback" begin
+    mechanism = rand_tree_mechanism(Float64, QuaternionFloating{Float64})
+    floatingjoint = first(joints(mechanism))
+    state = MechanismState(mechanism)
+
+    rand!(configuration(state))
+    @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+
+    problem = ODEProblem(state, (0., 1e-3))
+    sol = solve(problem, Vern7(), dt = 1e-4, callback = ConfigurationRenormalizationCallback(state))
+
+    set!(state, sol[end])
+    @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+end
