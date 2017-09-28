@@ -1,7 +1,13 @@
+__precompile__()
+
 module RigidBodyDynamicsDiffEqIntegration
 
+export
+    VisualizerCallback
+
 using RigidBodyDynamics
-import DiffEqBase
+using RigidBodyTreeInspector
+using DiffEqBase
 
 using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
 
@@ -39,7 +45,20 @@ function DiffEqBase.ODEProblem(state::MechanismState{X, M, C}, tspan, control! =
         ẋ
     end
 
-    DiffEqBase.ODEProblem(closed_loop_dynamics!, x, tspan)
+    ODEProblem(closed_loop_dynamics!, x, tspan)
+end
+
+function VisualizerCallback(state::MechanismState, vis::Visualizer; max_fps = 60.)
+    min_Δt = 1 / max_fps
+    last_update_time = Ref(-Inf)
+    condition = (t, u, integrator) -> time() - last_update_time[] >= min_Δt
+    visualize = integrator -> begin
+        set!(state, integrator.u)
+        settransform!(vis, state)
+        last_update_time[] = time()
+        u_modified!(integrator, false)
+    end
+    DiscreteCallback(condition, visualize; save_positions = (false, false))
 end
 
 end # module
