@@ -20,8 +20,5 @@ using Base.Test
     set!(state, x0)
     ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
 
-    @show [qs[end]; vs[end]]
-    @show sol[end]
-
     @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
 end
