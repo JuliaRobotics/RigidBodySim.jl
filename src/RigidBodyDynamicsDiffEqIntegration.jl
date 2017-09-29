@@ -2,8 +2,10 @@ __precompile__()
 
 module RigidBodyDynamicsDiffEqIntegration
 
+# Callbacks
 export
-    VisualizerCallback
+    VisualizerCallback,
+    ConfigurationRenormalizationCallback
 
 using RigidBodyDynamics
 using RigidBodyTreeInspector
@@ -52,13 +54,26 @@ function VisualizerCallback(state::MechanismState, vis::Visualizer; max_fps = 60
     min_Δt = 1 / max_fps
     last_update_time = Ref(-Inf)
     condition = (t, u, integrator) -> time() - last_update_time[] >= min_Δt
-    visualize = integrator -> begin
+    visualize = function (integrator)
         set!(state, integrator.u)
         settransform!(vis, state)
         last_update_time[] = time()
         u_modified!(integrator, false)
     end
     DiscreteCallback(condition, visualize; save_positions = (false, false))
+end
+
+function ConfigurationRenormalizationCallback(state::MechanismState)
+    let state = state # https://github.com/JuliaLang/julia/issues/15276
+        renormalize = function (integrator)
+            q = view(integrator.u, 1 : num_positions(state))
+            set_configuration!(state, q)
+            normalize_configuration!(state)
+            q[:] = configuration(state)
+            u_modified!(integrator, true)
+        end
+        DiscreteCallback((t, u, integrator) -> true, renormalize; save_positions = (false, false))
+    end
 end
 
 end # module

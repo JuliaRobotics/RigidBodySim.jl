@@ -25,20 +25,29 @@ using Base.Test
 end
 
 @testset "visualizer callback" begin
-    srand(1)
-    urdf = Pkg.dir("RigidBodyDynamicsDiffEqIntegration", "test", "urdf", "Acrobot.urdf")
-    mechanism = parse_urdf(Float64, urdf)
-
+    mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     state = MechanismState(mechanism)
-    rand!(state)
 
-    # DrakeVisualizer.new_window(); sleep(3)
-    vis = Visualizer()
-    setgeometry!(vis, mechanism, parse_urdf(urdf, mechanism))
+    # DrakeVisualizer.new_window(); sleep(1)
+    vis = Visualizer(mechanism; show_inertias = true)
     settransform!(vis, state)
 
-    problem = ODEProblem(state, (0., 100.))
+    problem = ODEProblem(state, (0., 1.))
     vis_callback = VisualizerCallback(state, vis)
+    sol = solve(problem, RK4(), adaptive = false, dt = 1e-4, callback = vis_callback)
+end
 
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05, callback = vis_callback)
+@testset "renormalization callback" begin
+    mechanism = rand_tree_mechanism(Float64, QuaternionFloating{Float64})
+    floatingjoint = first(joints(mechanism))
+    state = MechanismState(mechanism)
+
+    rand!(configuration(state))
+    @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+
+    problem = ODEProblem(state, (0., 1e-3))
+    sol = solve(problem, Vern7(), dt = 1e-4, callback = ConfigurationRenormalizationCallback(state))
+
+    set!(state, sol[end])
+    @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 end
