@@ -10,6 +10,7 @@ export
 using RigidBodyDynamics
 using RigidBodyTreeInspector
 using DiffEqBase
+using LoopThrottle
 
 using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
 
@@ -63,7 +64,7 @@ function VisualizerCallback(state::MechanismState, vis::Visualizer; max_fps = 60
     DiscreteCallback(condition, visualize; save_positions = (false, false))
 end
 
-function ConfigurationRenormalizationCallback(state::MechanismState)
+function ConfigurationRenormalizationCallback(state::MechanismState, condition = (t, u, integrator) -> true)
     let state = state # https://github.com/JuliaLang/julia/issues/15276
         renormalize = function (integrator)
             q = view(integrator.u, 1 : num_positions(state))
@@ -72,8 +73,25 @@ function ConfigurationRenormalizationCallback(state::MechanismState)
             q[:] = configuration(state)
             u_modified!(integrator, true)
         end
-        DiscreteCallback((t, u, integrator) -> true, renormalize; save_positions = (false, false))
+        DiscreteCallback(condition, renormalize; save_positions = (false, false))
     end
+end
+
+# TODO: move to RigidBodyTreeInspector (lose the ::ODESolution requirement on sol to make it generic (just treat it as a function), add tspan?)
+function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
+        max_fps::Number = 60., realtime_rate::Number = 1.)
+    @assert max_fps > 0
+    @assert 0 < realtime_rate < Inf
+    framenum = 0
+    time_per_frame = realtime_rate / max_fps
+    final_time = last(sol.t)
+    @throttle framenum while (t = framenum * time_per_frame) <= final_time
+        x = sol(min(t, final_time))
+        set!(state, x)
+        normalize_configuration!(state)
+        settransform!(vis, state)
+        framenum += 1
+    end max_rate = max_fps
 end
 
 end # module
