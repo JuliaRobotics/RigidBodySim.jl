@@ -51,3 +51,19 @@ end
     set!(state, sol[end])
     @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 end
+
+@testset "ODESolution animation" begin
+    mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
+    state = MechanismState(mechanism)
+
+    final_time = 5.
+    problem = ODEProblem(state, (0., final_time))
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+
+    realtime_rate = 2.
+    # DrakeVisualizer.new_window(); sleep(1)
+    vis = Visualizer(mechanism; show_inertias = true)
+    animate(vis, state, sol, realtime_rate = 1000.)
+    elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate, max_fps = 60.)
+    @test elapsed ≈ final_time / realtime_rate atol = 0.1
+end
