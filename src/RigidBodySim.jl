@@ -1,6 +1,6 @@
 __precompile__()
 
-module RigidBodyDynamicsDiffEqIntegration
+module RigidBodySim
 
 # Callbacks
 export

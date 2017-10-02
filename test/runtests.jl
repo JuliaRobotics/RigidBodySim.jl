@@ -1,4 +1,4 @@
-using RigidBodyDynamicsDiffEqIntegration
+using RigidBodySim
 using RigidBodyDynamics
 using RigidBodyTreeInspector
 using OrdinaryDiffEq
@@ -7,7 +7,7 @@ using Base.Test
 @testset "compare to simulate" begin
     srand(1)
 
-    urdf = Pkg.dir("RigidBodyDynamicsDiffEqIntegration", "test", "urdf", "Acrobot.urdf")
+    urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
 
     state = MechanismState(mechanism)

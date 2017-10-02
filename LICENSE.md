@@ -1,4 +1,4 @@
-The RigidBodyDynamicsDiffEqIntegration.jl package is licensed under the MIT "Expat" License:
+The RigidBodySim.jl package is licensed under the MIT "Expat" License:
 
 > Copyright (c) 2017: Twan Koolen.
 >
