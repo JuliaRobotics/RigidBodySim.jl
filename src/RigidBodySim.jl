@@ -3,16 +3,20 @@ __precompile__()
 module RigidBodySim
 
 export
+    any_open_visualizer_windows,
     new_visualizer_window,
     configuration_renormalizer
 
-using RigidBodyDynamics
-using RigidBodyTreeInspector
-using DiffEqBase
+using Reexport
+
+@reexport using RigidBodyDynamics
+@reexport using OrdinaryDiffEq
+@reexport using RigidBodyTreeInspector
+
 using LoopThrottle
-using DrakeVisualizer
 using JSON
 using LCMCore
+using DrakeVisualizer
 
 using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
 using DrakeVisualizer.Comms: CommsT
@@ -68,30 +72,28 @@ function configuration_renormalizer(state::MechanismState, condition = (t, u, in
     DiscreteCallback(condition, renormalize; save_positions = (false, false))
 end
 
-mutable struct SimulationState
-    simulate::Bool
-    SimulationState() = new(true)
+mutable struct SimulationCommands
+    terminate::Bool
+    SimulationCommands() = new(false)
 end
 
-@noinline handle_control_msg_fail(command) = throw(ArgumentError("Command $command not recognized."))
-
-function handle_control_msg(simstate::SimulationState, msg::CommsT)
+function handle_control_msg(sim_commands::SimulationCommands, msg::CommsT)
     @assert msg.format == "rigid_body_sim_json"
-    @assert msg.format_version_major == 0
+    @assert msg.format_version_major == 1
     @assert msg.format_version_minor == 1
     commands = JSON.parse(IOBuffer(msg.data))
     for (command, arg) in commands
-        if command == "simulate"
-            simstate.simulate = arg
+        if command == "terminate"
+            sim_commands.terminate = true
         else
-            handle_control_msg_fail(command)
+            throw(ArgumentError("Command $command not recognized."))
         end
     end
 end
 
-function terminator(simstate::SimulationState)
-    condition = (t, u, integrator) -> (yield(); !simstate.simulate)
-    action = integrator -> (terminate!(integrator); simstate.simulate = true)
+function terminator(sim_commands::SimulationCommands)
+    condition = (t, u, integrator) -> (yield(); sim_commands.terminate)
+    action = integrator -> (terminate!(integrator); sim_commands.terminate = false)
     DiscreteCallback(condition, action)
 end
 
@@ -112,14 +114,15 @@ function transform_publisher(state::MechanismState, vis::Visualizer; max_fps = 6
 end
 
 function DiffEqBase.CallbackSet(vis::Visualizer, state::MechanismState, lcm::LCM = LCM(); max_fps = 60.)
-    simstate = SimulationState()
-    subscribe(lcm, LCM_CONTROL_CHANNEL, (channel, msg) -> handle_control_msg(simstate, msg), CommsT)
+    sim_commands = SimulationCommands()
+    subscribe(lcm, LCM_CONTROL_CHANNEL, (channel, msg) -> handle_control_msg(sim_commands, msg), CommsT)
     @async while isgood(lcm)
         handle(lcm)
     end
-    CallbackSet(terminator(simstate), transform_publisher(state, vis; max_fps = max_fps))
+    CallbackSet(terminator(sim_commands), transform_publisher(state, vis; max_fps = max_fps))
 end
 
+any_open_visualizer_windows() = DrakeVisualizer.any_open_windows()
 new_visualizer_window() = DrakeVisualizer.new_window(script = DRAKE_VISUALIZER_SCRIPT)
 
 # TODO: move to RigidBodyTreeInspector (lose the ::ODESolution requirement on sol to make it generic (just treat it as a function), add tspan?)
