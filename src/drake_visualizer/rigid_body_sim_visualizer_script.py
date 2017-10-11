@@ -9,7 +9,7 @@ def sendControlMessage(contents):
     msg = lcmrl.viewer2_comms_t()
     msg.utime = getUtime()
     msg.format = 'rigid_body_sim_json'
-    msg.format_version_major = 0
+    msg.format_version_major = 1
     msg.format_version_minor = 1
     data = dict(**contents)
     msg.data = bytearray(json.dumps(data), encoding='utf-8')
@@ -17,7 +17,7 @@ def sendControlMessage(contents):
     lcmUtils.publish(channel, msg)
 
 def stopSimulation():
-    sendControlMessage({'simulate': False})
+    sendControlMessage({'terminate': None})
 
 toolBar = app.addToolBar("RigidBodySim.jl")
 app.addToolBarAction(toolBar, 'Stop Simulation', icon=':/images/media/media-playback-stop.png', callback=stopSimulation)

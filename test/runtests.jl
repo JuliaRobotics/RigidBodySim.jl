@@ -10,7 +10,7 @@ using Base.Test
 function send_control_message(lcm::LCM, contents::Associative)
     utime = round(Int, time() * 1e-3)
     format = "rigid_body_sim_json"
-    version_major = 0
+    version_major = 1
     version_minor = 1
     data = JSON.json(contents)
     msg = DrakeVisualizer.Comms.CommsT(utime, format, version_major, version_minor, data)
@@ -53,14 +53,14 @@ try
         problem = ODEProblem(state, (0., tfinal))
 
         # Simulate for 3 seconds (wall time) and then send a termination command
-        @async (sleep(3.); send_control_message(LCM(), Dict("simulate" => false)))
+        @async (sleep(3.); send_control_message(LCM(), Dict("terminate" => nothing)))
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
         println("last(sol.t) after early termination 1: $(last(sol.t))")
 
         # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
-        @async (sleep(3.); send_control_message(LCM(), Dict("simulate" => false)))
+        @async (sleep(3.); send_control_message(LCM(), Dict("terminate" => nothing)))
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
@@ -98,4 +98,19 @@ try
     end
 finally
     kill(visualizer_process)
+end
+
+# notebooks
+@testset "example notebooks" begin
+    using NBInclude
+    notebookdir = Pkg.dir("RigidBodySim", "notebooks")
+    for file in readdir(notebookdir)
+        name, ext = splitext(file)
+        if lowercase(ext) == ".ipynb"
+            @testset "$name" begin
+                println("Testing $name.")
+                nbinclude(joinpath(notebookdir, file), regex = r"^((?!\#NBSKIP).)*$"s)
+            end
+        end
+    end
 end
