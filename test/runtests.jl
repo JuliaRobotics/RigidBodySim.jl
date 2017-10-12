@@ -90,11 +90,18 @@ try
         problem = ODEProblem(state, (0., final_time))
         sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
 
+        # regular playback
         realtime_rate = 2.
         vis = Visualizer(mechanism; show_inertias = true)
         animate(vis, state, sol, realtime_rate = 1000.)
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate, max_fps = 60.)
         @test elapsed ≈ final_time / realtime_rate atol = 0.1
+
+        # premature termination
+        termination_time = 1.5
+        @async (sleep(termination_time); send_control_message(LCM(), Dict("terminate" => nothing)))
+        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+        @test elapsed ≈ termination_time atol = 0.1
     end
 finally
     kill(visualizer_process)

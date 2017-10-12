@@ -16,8 +16,8 @@ def sendControlMessage(contents):
     msg.num_bytes = len(msg.data)
     lcmUtils.publish(channel, msg)
 
-def stopSimulation():
+def terminate():
     sendControlMessage({'terminate': None})
 
 toolBar = app.addToolBar("RigidBodySim.jl")
-app.addToolBarAction(toolBar, 'Stop Simulation', icon=':/images/media/media-playback-stop.png', callback=stopSimulation)
+app.addToolBarAction(toolBar, 'Stop Simulation/Playback', icon=':/images/media/media-playback-stop.png', callback=terminate)
