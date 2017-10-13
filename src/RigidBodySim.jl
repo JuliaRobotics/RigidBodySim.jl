@@ -7,6 +7,8 @@ export
     new_visualizer_window,
     configuration_renormalizer
 
+export PeriodicCallback
+
 using Reexport
 
 @reexport using RigidBodyDynamics
