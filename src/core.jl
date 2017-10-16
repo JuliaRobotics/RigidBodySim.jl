@@ -1,26 +1,3 @@
-# TODO: contribute to DifferentialEquations.
-function PeriodicCallback(f, Δt::Number; kwargs...)
-    next_time = Ref(typemin(Δt))
-    condition = (t, u, integrator) -> t == next_time[]
-    affect! = function (integrator)
-        f(integrator)
-        new_time = next_time[] + Δt
-        if any(t -> t > new_time, integrator.opts.tstops.valtree) # TODO: accessing internal data...
-            next_time[] = new_time
-            add_tstop!(integrator, new_time)
-        end
-    end
-    initialize = function (c, t, u, integrator)
-        next_time[] = t
-        affect!(integrator) # first call should be *before* any time steps have been taken
-    end
-    DiscreteCallback(condition, affect!; initialize = initialize, kwargs...)
-end
-
-function zero_control!(τ::AbstractVector, t, state::MechanismState)
-    τ[:] = 0
-end
-
 function DiffEqBase.ODEProblem(state::MechanismState{X, M, C}, tspan, control! = zero_control!) where {X, M, C}
     # TODO: running controller at a reduced rate
     # TODO: ability to affect external wrenches
