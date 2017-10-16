@@ -69,29 +69,29 @@ end
     end
 end
 
-visualizer_process = new_visualizer_window(); sleep(1)
-try
-    @testset "compare to simulate" begin
-        srand(1)
+@testset "compare to simulate" begin
+    srand(1)
 
-        urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
-        mechanism = parse_urdf(Float64, urdf)
+    urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
+    mechanism = parse_urdf(Float64, urdf)
 
-        state = MechanismState(mechanism)
-        rand!(state)
-        x0 = state_vector(state) # TODO: Vector constructor
+    state = MechanismState(mechanism)
+    rand!(state)
+    x0 = state_vector(state) # TODO: Vector constructor
 
-        final_time = 5.
-        problem = ODEProblem(state, (0., final_time))
-        sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    final_time = 5.
+    problem = ODEProblem(state, (0., final_time))
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
 
-        set!(state, x0)
-        ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
+    set!(state, x0)
+    ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
 
-        @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
-    end
+    @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
+end
 
-    @testset "visualizer callbacks" begin
+@testset "visualizer callbacks" begin
+    visualizer_process = new_visualizer_window(); sleep(1)
+    try
         mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
         state = MechanismState(mechanism)
 
@@ -116,24 +116,29 @@ try
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
         println("last(sol.t) after early termination 2: $(last(sol.t))")
+    finally
+        kill(visualizer_process)
     end
+end
 
-    @testset "renormalization callback" begin
-        mechanism = rand_tree_mechanism(Float64, QuaternionFloating{Float64})
-        floatingjoint = first(joints(mechanism))
-        state = MechanismState(mechanism)
+@testset "renormalization callback" begin
+    mechanism = rand_tree_mechanism(Float64, QuaternionFloating{Float64})
+    floatingjoint = first(joints(mechanism))
+    state = MechanismState(mechanism)
 
-        rand!(configuration(state))
-        @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+    rand!(configuration(state))
+    @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 
-        problem = ODEProblem(state, (0., 1e-3))
-        sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
+    problem = ODEProblem(state, (0., 1e-3))
+    sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
 
-        set!(state, sol[end])
-        @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
-    end
+    set!(state, sol[end])
+    @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+end
 
-    @testset "ODESolution animation" begin
+@testset "ODESolution animation" begin
+    visualizer_process = new_visualizer_window(); sleep(1)
+    try
         mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
         state = MechanismState(mechanism)
 
@@ -153,9 +158,36 @@ try
         @async (sleep(termination_time); send_control_message(LCM(), Dict("terminate" => nothing)))
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
         @test elapsed ≈ termination_time atol = 0.1
+    finally
+        kill(visualizer_process)
     end
-finally
-    kill(visualizer_process)
+end
+
+@testset "PeriodicController" begin
+    urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
+    mechanism = parse_urdf(Float64, urdf)
+    state = MechanismState(mechanism)
+    controltimes = Float64[]
+    Δt = 0.25
+    controller = PeriodicController(state, Δt, function (τ, t, state)
+        push!(controltimes, t)
+        τ[1] = sin(t)
+        τ[2] = cos(t)
+    end)
+    final_time = 25.3
+    problem = ODEProblem(state, (0., final_time), controller)
+
+    # don't forget to pass in callback:
+    @test_throws RigidBodySim.PeriodicControlFailure solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+
+    # ensure that controller gets called at appropriate times:
+    initialize = (c, t, u, integrator) -> empty!(controltimes)
+    controller_callback = PeriodicCallback(controller, initialize = initialize)
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05, callback = controller_callback)
+    @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
+
+    # ensure that we can solve the same problem again without errors
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05, callback = controller_callback)
 end
 
 # notebooks
