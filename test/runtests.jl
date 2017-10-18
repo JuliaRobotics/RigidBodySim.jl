@@ -111,6 +111,8 @@ end
         println("last(sol.t) after early termination 1: $(last(sol.t))")
 
         # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
+        send_control_message(LCM(), Dict("terminate" => nothing))
+        sleep(0.1)
         @async (sleep(3.); send_control_message(LCM(), Dict("terminate" => nothing)))
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
         @test sol.t[end] > 2 * dt

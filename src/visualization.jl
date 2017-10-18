@@ -28,7 +28,8 @@ end
 function terminator(commands::SimulationCommands)
     condition = (t, u, integrator) -> (yield(); commands.terminate)
     action = integrator -> (terminate!(integrator); commands.terminate = false)
-    DiscreteCallback(condition, action)
+    initialize = (c, t, u, integrator) -> commands.terminate = false
+    DiscreteCallback(condition, action, initialize = initialize)
 end
 
 function transform_publisher(state::MechanismState, vis::Visualizer; max_fps = 60.)
