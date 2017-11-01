@@ -1,5 +1,6 @@
 const DRAKE_VISUALIZER_SCRIPT = joinpath(@__DIR__, "rigid_body_sim_visualizer_script.py")
 const LCM_CONTROL_CHANNEL = "RIGID_BODY_SIM_CONTROL"
+const LCM_TIME_CHANNEL = "RIGID_BODY_SIM_TIME"
 
 mutable struct SimulationCommands
     terminate::Bool
@@ -32,25 +33,38 @@ function terminator(commands::SimulationCommands)
     DiscreteCallback(condition, action, initialize = initialize)
 end
 
-function transform_publisher(state::MechanismState, vis::Visualizer; max_fps = 60.)
+function visualize(vis::Visualizer, t::Number, state::MechanismState)
+    lcm = vis.core.lcm
+    settransform!(vis, state)
+    time_msg = UTimeT()
+    time_msg.utime = floor(Int64, t * 1e3)
+    publish(lcm, LCM_TIME_CHANNEL, time_msg)
+    nothing
+end
+
+function transform_publisher(state::MechanismState, vis::Visualizer, lcm::LCM; max_fps = 60.)
+    time_msg = UTimeT()
     last_update_time = Ref(-Inf)
     condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
-        (t, u, integrator) -> time() - last_update_time[] >= min_Δt
+        function (t, u, integrator)
+            last_time_step = length(integrator.opts.tstops) == 1 && t == top(integrator.opts.tstops)
+            last_time_step || time() - last_update_time[] >= min_Δt
+        end
     end
-    visualize = let state = state, vis = vis, last_update_time = last_update_time
+    action = let state = state, vis = vis, last_update_time = last_update_time, time_msg = time_msg, lcm = lcm
         function (integrator)
-            set!(state, integrator.u)
-            settransform!(vis, state)
             last_update_time[] = time()
+            set!(state, integrator.u)
+            visualize(vis, integrator.t, state)
             u_modified!(integrator, false)
         end
     end
-    DiscreteCallback(condition, visualize; save_positions = (false, false))
+    DiscreteCallback(condition, action; save_positions = (false, false))
 end
 
 function DiffEqBase.CallbackSet(vis::Visualizer, state::MechanismState; max_fps = 60.)
     commands = SimulationCommands(vis.core.lcm)
-    CallbackSet(terminator(commands), transform_publisher(state, vis; max_fps = max_fps))
+    CallbackSet(terminator(commands), transform_publisher(state, vis, vis.core.lcm; max_fps = max_fps))
 end
 
 any_open_visualizer_windows() = DrakeVisualizer.any_open_windows()
@@ -73,7 +87,7 @@ function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, 
         x = sol(min(t, tf))
         set!(state, x)
         normalize_configuration!(state)
-        settransform!(vis, state)
+        visualize(vis, t, state)
         framenum += 1
         yield()
     end max_rate = max_fps
