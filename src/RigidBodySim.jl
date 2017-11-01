@@ -32,6 +32,7 @@ using DrakeVisualizer
 
 using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
 
+include("lcmtypes/utime_t.jl")
 include("periodic.jl")
 include("control.jl")
 include("core.jl")
