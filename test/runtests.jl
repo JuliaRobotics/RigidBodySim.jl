@@ -66,6 +66,26 @@ end
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
         println("last(sol.t) after early termination 2: $(last(sol.t))")
+
+        # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
+        problem = ODEProblem(state, (0., 1.))
+        normaltime = @elapsed solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+        @show normaltime
+        pausetime = normaltime / 3
+        unpausetime = pausetime + normaltime * 3
+        @async (sleep(pausetime); send_control_message(LCM(), Dict("pause" => nothing)))
+        @async (sleep(unpausetime); send_control_message(LCM(), Dict("pause" => nothing)))
+        timewithpause = @elapsed solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+        @test timewithpause > normaltime * 2
+
+        # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
+        problem = ODEProblem(state, (0., tfinal))
+        @async (sleep(3.); send_control_message(LCM(), Dict("pause" => nothing)))
+        @async (sleep(4.); send_control_message(LCM(), Dict("terminate" => nothing)))
+        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+        @test sol.t[end] > 2 * dt
+        @test sol.t[end] < tfinal
+        println("last(sol.t) after early termination 3: $(last(sol.t))")
     finally
         kill(visualizer_process)
     end
@@ -108,6 +128,21 @@ end
         @async (sleep(termination_time); send_control_message(LCM(), Dict("terminate" => nothing)))
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
         @test elapsed ≈ termination_time atol = 0.1
+
+        # pause and unpause
+        pause_time = 1.0
+        unpause_time = 3.5
+        @async (sleep(pause_time); send_control_message(LCM(), Dict("pause" => nothing)))
+        @async (sleep(unpause_time); send_control_message(LCM(), Dict("pause" => nothing)))
+        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+        @show elapsed
+        @test elapsed ≈ final_time / realtime_rate + (unpause_time - pause_time) atol = 0.2 # higher atol because of pause poll int
+
+        # pause and terminate
+        @async (sleep(pause_time); send_control_message(LCM(), Dict("pause" => nothing)))
+        @async (sleep(termination_time); send_control_message(LCM(), Dict("terminate" => nothing)))
+        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+        @test elapsed ≈ termination_time atol = 0.2 # higher atol because of pause poll int
     finally
         kill(visualizer_process)
     end

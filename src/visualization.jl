@@ -1,10 +1,17 @@
 const DRAKE_VISUALIZER_SCRIPT = joinpath(@__DIR__, "rigid_body_sim_visualizer_script.py")
 const LCM_CONTROL_CHANNEL = "RIGID_BODY_SIM_CONTROL"
 const LCM_TIME_CHANNEL = "RIGID_BODY_SIM_TIME"
+const DEFAULT_PAUSE_POLLINT = 0.05
 
 mutable struct SimulationCommands
     terminate::Bool
-    SimulationCommands() = new(false)
+    pause::Bool
+    SimulationCommands() = (ret = new(); initialize!(ret); ret)
+end
+
+function initialize!(commands::SimulationCommands)
+    commands.terminate = false
+    commands.pause = false
 end
 
 function SimulationCommands(lcm::LCM)
@@ -20,16 +27,26 @@ function handle_control_msg(commands::SimulationCommands, msg::DrakeVisualizer.C
     for (command, arg) in JSON.parse(IOBuffer(msg.data))
         if command == "terminate"
             commands.terminate = true
+        elseif command == "pause"
+            commands.pause = !commands.pause
         else
             throw(ArgumentError("Command $command not recognized."))
         end
     end
 end
 
-function terminator(commands::SimulationCommands)
-    condition = (t, u, integrator) -> (yield(); commands.terminate)
-    action = integrator -> (terminate!(integrator); commands.terminate = false)
-    initialize = (c, t, u, integrator) -> commands.terminate = false
+function command_handler(commands::SimulationCommands; pause_pollint::Float64 = DEFAULT_PAUSE_POLLINT)
+    condition = (t, u, integrator) -> true
+    action = let commands = commands
+        function (integrator)
+            yield()
+            while commands.pause && !commands.terminate
+                sleep(pause_pollint)
+            end
+            commands.terminate && (commands.terminate = false; terminate!(integrator))
+        end
+    end
+    initialize = (c, t, u, integrator) -> initialize!(commands)
     DiscreteCallback(condition, action, initialize = initialize)
 end
 
@@ -64,14 +81,14 @@ end
 
 function DiffEqBase.CallbackSet(vis::Visualizer, state::MechanismState; max_fps = 60.)
     commands = SimulationCommands(vis.core.lcm)
-    CallbackSet(terminator(commands), transform_publisher(state, vis, vis.core.lcm; max_fps = max_fps))
+    CallbackSet(transform_publisher(state, vis, vis.core.lcm; max_fps = max_fps), command_handler(commands))
 end
 
 any_open_visualizer_windows() = DrakeVisualizer.any_open_windows()
 new_visualizer_window() = DrakeVisualizer.new_window(script = DRAKE_VISUALIZER_SCRIPT)
 
 function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
-        max_fps::Number = 60., realtime_rate::Number = 1.)
+        max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = DEFAULT_PAUSE_POLLINT)
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
 
@@ -80,11 +97,13 @@ function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, 
     framenum = 0
     walltime0 = time()
     @throttle framenum while true
-        if commands.terminate
-            commands.terminate = false
-            break
-        end
         t = min(tf, t0 + (time() - walltime0) * realtime_rate)
+        while commands.pause && !commands.terminate
+            sleep(pause_pollint)
+            t0 = t
+            walltime0 = time()
+        end
+        commands.terminate && (commands.terminate = false; break)
         x = sol(t)
         set!(state, x)
         normalize_configuration!(state)
