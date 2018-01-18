@@ -79,16 +79,18 @@ function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, 
     t0, tf = first(sol.t), last(sol.t)
     framenum = 0
     walltime0 = time()
-    @throttle framenum while (t = t0 + (time() - walltime0) * realtime_rate) <= tf
+    @throttle framenum while true
         if commands.terminate
             commands.terminate = false
             break
         end
-        x = sol(min(t, tf))
+        t = min(tf, t0 + (time() - walltime0) * realtime_rate)
+        x = sol(t)
         set!(state, x)
         normalize_configuration!(state)
         visualize(vis, t, state)
         framenum += 1
+        t == tf && break
         yield()
     end max_rate = max_fps
 end
