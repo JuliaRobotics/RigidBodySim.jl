@@ -1,6 +1,7 @@
 julia 0.6
 RigidBodyDynamics 0.4.0
 OrdinaryDiffEq
+DiffEqCallbacks 0.4.0
 RigidBodyTreeInspector 0.3.2
 LoopThrottle 0.0.1
 Reexport

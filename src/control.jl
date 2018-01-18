@@ -13,7 +13,7 @@ end
 
 PeriodicController(state::MechanismState{X}, Δt::Number, control!) where {X} = PeriodicController{X}(num_velocities(state), Δt, control!)
 
-function PeriodicCallback(controller::PeriodicController; initialize = DiffEqBase.INITIALIZE_DEFAULT, kwargs...)
+function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController; initialize = DiffEqBase.INITIALIZE_DEFAULT, kwargs...)
     periodic_initialize = function (c, t, u, integrator)
         T = typeof(controller.Δt)
         controller.last_control_time[] = ifelse(integrator.tdir > 0, typemin(T), typemax(T))
