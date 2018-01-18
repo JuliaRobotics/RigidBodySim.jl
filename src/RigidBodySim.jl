@@ -16,13 +16,11 @@ export
     any_open_visualizer_windows,
     new_visualizer_window
 
-# Temporary (use DiffEqCallbacks version once PR is accepted):
-export PeriodicCallback
-
 using Reexport
 
 @reexport using RigidBodyDynamics
 @reexport using OrdinaryDiffEq
+@reexport using DiffEqCallbacks
 @reexport using RigidBodyTreeInspector
 
 using LoopThrottle
@@ -30,10 +28,10 @@ using JSON
 using LCMCore
 using DrakeVisualizer
 
+using DataStructures: top
 using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
 
 include("lcmtypes/utime_t.jl")
-include("periodic.jl")
 include("control.jl")
 include("core.jl")
 include("visualization.jl")
