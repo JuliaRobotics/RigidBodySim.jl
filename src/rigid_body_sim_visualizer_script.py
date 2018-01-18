@@ -22,6 +22,9 @@ def sendControlMessage(contents):
 def terminate():
     sendControlMessage({'terminate': None})
 
+def pause():
+    sendControlMessage({'pause': None})
+
 class TimeDisplay:
 
     def __init__(self):
@@ -44,4 +47,5 @@ toolBar = app.addToolBar("RigidBodySim.jl")
 timeDisplay = TimeDisplay()
 toolBar.addWidget(timeDisplay.widget)
 app.addToolBarAction(toolBar, 'Stop Simulation/Playback', icon=':/images/media/media-playback-stop.png', callback=terminate)
+app.addToolBarAction(toolBar, 'Pause Simulation/Playback', icon=':/images/media/media-playback-pause.png', callback=pause)
 # timeDisplay.setTime(1)
