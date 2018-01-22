@@ -1,3 +1,5 @@
+module RigidBodySimTest
+
 using RigidBodySim
 using RigidBodyDynamics
 using RigidBodyTreeInspector
@@ -191,4 +193,6 @@ end
             end
         end
     end
+end
+
 end
