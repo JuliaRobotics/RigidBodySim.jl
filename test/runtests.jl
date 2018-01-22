@@ -1,10 +1,13 @@
 using RigidBodySim
 using RigidBodyDynamics
-using DrakeVisualizer
 using RigidBodyTreeInspector
 using OrdinaryDiffEq
+using DiffEqCallbacks
+
+using DrakeVisualizer
 using JSON
 using LCMCore
+
 using Base.Test
 
 function send_control_message(lcm::LCM, contents::Associative)

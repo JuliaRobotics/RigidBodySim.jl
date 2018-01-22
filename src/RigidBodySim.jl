@@ -16,12 +16,10 @@ export
     any_open_visualizer_windows,
     new_visualizer_window
 
-using Reexport
-
-@reexport using RigidBodyDynamics
-@reexport using OrdinaryDiffEq
-@reexport using DiffEqCallbacks
-@reexport using RigidBodyTreeInspector
+using RigidBodyDynamics
+using OrdinaryDiffEq
+using DiffEqCallbacks
+using RigidBodyTreeInspector
 
 using LoopThrottle
 using JSON
