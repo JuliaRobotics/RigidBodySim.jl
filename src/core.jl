@@ -1,4 +1,4 @@
-function DiffEqBase.ODEProblem(state::MechanismState{X, M, C}, tspan, control! = zero_control!) where {X, M, C}
+function _create_ode_problem(state::MechanismState{X, M, C}, tspan, control!, callback) where {X, M, C}
     # TODO: running controller at a reduced rate
     # TODO: ability to affect external wrenches
 
@@ -26,7 +26,11 @@ function DiffEqBase.ODEProblem(state::MechanismState{X, M, C}, tspan, control! =
         end
     end
     x = state_vector(state) # TODO: Vector constructor
-    ODEProblem(closed_loop_dynamics!, x, tspan)
+    ODEProblem(closed_loop_dynamics!, x, tspan; callback = callback)
+end
+
+function DiffEqBase.ODEProblem(state::MechanismState, tspan, control! = zero_control!; callback = nothing)
+    _create_ode_problem(state, tspan, control!, callback)
 end
 
 function configuration_renormalizer(state::MechanismState, condition = (t, u, integrator) -> true)

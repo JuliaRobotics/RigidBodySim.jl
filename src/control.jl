@@ -5,43 +5,41 @@ struct PeriodicController{Tau, T<:Number, C}
     Δt::T
     control!::C
     docontrol::Base.RefValue{Bool}
-    last_control_time::Base.RefValue{T} # only used for checking that PeriodicCallback is correctly set up
 
-    PeriodicController(τ::Vector{Tau}, Δt::T, control!::C) where {Tau, T<:Number, C} = new{Tau, T, C}(τ, Δt, control!, Ref(true), Ref(typemin(T)))
+    PeriodicController(τ::Vector{Tau}, Δt::T, control!::C) where {Tau, T<:Number, C} = new{Tau, T, C}(τ, Δt, control!, Ref(true))
     PeriodicController{Tau}(τlength::Integer, Δt::Number, control!) where {Tau} = PeriodicController(zeros(Tau, τlength), Δt, control!)
 end
 
 PeriodicController(state::MechanismState{X}, Δt::Number, control!) where {X} = PeriodicController{X}(num_velocities(state), Δt, control!)
 
-function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController; initialize = DiffEqBase.INITIALIZE_DEFAULT, kwargs...)
-    periodic_initialize = function (c, t, u, integrator)
-        T = typeof(controller.Δt)
-        controller.last_control_time[] = ifelse(integrator.tdir > 0, typemin(T), typemax(T))
-        initialize(c, t, u, integrator)
+function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController; initialize = DiffEqBase.INITIALIZE_DEFAULT, save_positions = (false, false))
+    periodic_initialize = let controller = controller, initialize = initialize
+        function (c, t, u, integrator)
+            controller.docontrol[] = true
+            initialize(c, t, u, integrator)
+        end
     end
-    PeriodicCallback(integrator -> controller.docontrol[] = true, controller.Δt; initialize = periodic_initialize, kwargs...)
-end
-
-struct PeriodicControlFailure <: Exception
-    Δt
-    time_since_last_control
-end
-
-function Base.showerror(io::IO, e::PeriodicControlFailure)
-    print(io, """
-        output of PeriodicController with Δt = $(e.Δt) has not been updated for Δt = $(e.time_since_last_control).
-        Please ensure that an associated PeriodicCallback was created and passed into OrdinaryDiffEq.solve or OrdinaryDiffEq.init.""")
+    f = let controller = controller
+            function (integrator)
+                controller.docontrol[] = true
+                u_modified!(integrator, false)
+            end
+    end
+    PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = save_positions)
 end
 
 function (controller::PeriodicController)(τ::AbstractVector, t, state)
     if controller.docontrol[]
         controller.control!(controller.τ, t, state)
         controller.docontrol[] = false
-        controller.last_control_time[] = t
     end
-    tprev = controller.last_control_time[]
-    # TODO: https://github.com/JuliaDiffEq/OrdinaryDiffEq.jl/issues/211:
-    # (tprev <= t <= tprev + controller.Δt) || throw(PeriodicControlFailure(controller.Δt, t - tprev))
-    (t <= tprev + controller.Δt) || throw(PeriodicControlFailure(controller.Δt, t - tprev))
     τ[:] = controller.τ
+end
+
+function DiffEqBase.ODEProblem(state::MechanismState, tspan, controller::PeriodicController;
+        callback = nothing,
+        controller_initialize = DiffEqBase.INITIALIZE_DEFAULT,
+        controller_save_positions = (false, false))
+    controlcallback = PeriodicCallback(controller; initialize = controller_initialize, save_positions = controller_save_positions)
+    _create_ode_problem(state, tspan, controller, CallbackSet(controlcallback, callback))
 end
