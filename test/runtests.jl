@@ -158,15 +158,15 @@ end
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
     controltimes = Float64[]
+    initialize = (c, t, u, integrator) -> empty!(controltimes)
     Δt = 0.25
     controller = PeriodicController(state, Δt, function (τ, t, state)
         push!(controltimes, t)
         τ[1] = sin(t)
         τ[2] = cos(t)
-    end)
+    end; initialize = initialize)
     final_time = 25.3
-    initialize = (c, t, u, integrator) -> empty!(controltimes)
-    problem = ODEProblem(state, (0., final_time), controller; controller_initialize = initialize)
+    problem = ODEProblem(state, (0., final_time), controller)
 
     # ensure that controller gets called at appropriate times:
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
