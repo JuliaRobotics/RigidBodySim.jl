@@ -158,26 +158,24 @@ end
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
     controltimes = Float64[]
+    initialize = (c, t, u, integrator) -> empty!(controltimes)
     Δt = 0.25
     controller = PeriodicController(state, Δt, function (τ, t, state)
         push!(controltimes, t)
         τ[1] = sin(t)
         τ[2] = cos(t)
-    end)
+    end; initialize = initialize)
     final_time = 25.3
     problem = ODEProblem(state, (0., final_time), controller)
 
-    # don't forget to pass in callback:
-    @test_throws RigidBodySim.PeriodicControlFailure solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
-
     # ensure that controller gets called at appropriate times:
-    initialize = (c, t, u, integrator) -> empty!(controltimes)
-    controller_callback = PeriodicCallback(controller, initialize = initialize)
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05, callback = controller_callback)
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 
     # ensure that we can solve the same problem again without errors
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05, callback = controller_callback)
+    empty!(controltimes)
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 end
 
 # notebooks
