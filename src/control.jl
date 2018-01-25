@@ -15,8 +15,8 @@ struct PeriodicController{Tau, T<:Number, C, I}
     end
 end
 
-function PeriodicController(state::MechanismState{X}, Δt::Number, control; kwargs...) where {X}
-    PeriodicController(zeros(X, num_velocities(state)), Δt, control; kwargs...)
+function PeriodicController(state::MechanismState, Δt::Number, control; kwargs...)
+    PeriodicController(zeros(velocity(state)), Δt, control; kwargs...)
 end
 
 function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
@@ -44,6 +44,5 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
 end
 
 function DiffEqBase.ODEProblem(state::MechanismState, tspan, controller::PeriodicController; callback = nothing)
-    controlcallback = PeriodicCallback(controller)
-    _create_ode_problem(state, tspan, controller, CallbackSet(controlcallback, callback))
+    _create_ode_problem(state, tspan, controller, CallbackSet(PeriodicCallback(controller), callback))
 end
