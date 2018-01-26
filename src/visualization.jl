@@ -44,10 +44,11 @@ function command_handler(commands::SimulationCommands; pause_pollint::Float64 = 
                 sleep(pause_pollint)
             end
             commands.terminate && (commands.terminate = false; terminate!(integrator))
+            u_modified!(integrator, false)
         end
     end
     initialize = (c, t, u, integrator) -> initialize!(commands)
-    DiscreteCallback(condition, action, initialize = initialize)
+    DiscreteCallback(condition, action, initialize = initialize, save_positions=(false, false))
 end
 
 function visualize(vis::Visualizer, t::Number, state::MechanismState)
