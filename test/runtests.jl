@@ -17,7 +17,7 @@ function send_control_message(lcm::LCM, contents::Associative)
     format = "rigid_body_sim_json"
     version_major = 1
     version_minor = 1
-    data = JSON.json(contents)
+    data = convert(Vector{UInt8}, JSON.json(contents))
     msg = DrakeVisualizer.Comms.CommsT(utime, format, version_major, version_minor, data)
     publish(lcm, RigidBodySim.LCM_CONTROL_CHANNEL, msg)
 end
@@ -158,7 +158,7 @@ end
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
     controltimes = Float64[]
-    initialize = (c, t, u, integrator) -> empty!(controltimes)
+    initialize = (c, u, t, integrator) -> empty!(controltimes)
     Δt = 0.25
     controller = PeriodicController(state, Δt, function (τ, t, state)
         push!(controltimes, t)

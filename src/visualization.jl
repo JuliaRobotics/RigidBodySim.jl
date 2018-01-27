@@ -36,7 +36,7 @@ function handle_control_msg(commands::SimulationCommands, msg::DrakeVisualizer.C
 end
 
 function command_handler(commands::SimulationCommands; pause_pollint::Float64 = DEFAULT_PAUSE_POLLINT)
-    condition = (t, u, integrator) -> true
+    condition = (u, t, integrator) -> true
     action = let commands = commands
         function (integrator)
             yield()
@@ -63,7 +63,7 @@ function transform_publisher(state::MechanismState, vis::Visualizer, lcm::LCM; m
     time_msg = UTimeT()
     last_update_time = Ref(-Inf)
     condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
-        function (t, u, integrator)
+        function (u, t, integrator)
             last_time_step = length(integrator.opts.tstops) == 1 && t == top(integrator.opts.tstops)
             last_time_step || time() - last_update_time[] >= min_Δt
         end

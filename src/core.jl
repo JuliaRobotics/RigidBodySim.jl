@@ -5,7 +5,7 @@ function _create_ode_problem(state::MechanismState{X, M, C}, tspan, control!, ca
     result = DynamicsResult{C}(state.mechanism)
     τ = similar(velocity(state))
     closed_loop_dynamics! = let state = state, result = result, τ = τ # https://github.com/JuliaLang/julia/issues/15276
-        function (t, x, ẋ)
+        function (ẋ, x, p, t)
             # TODO: unpack function in RigidBodyDynamics:
             nq = num_positions(state)
             nv = num_velocities(state)
@@ -33,7 +33,7 @@ function DiffEqBase.ODEProblem(state::MechanismState, tspan, control! = zero_con
     _create_ode_problem(state, tspan, control!, callback)
 end
 
-function configuration_renormalizer(state::MechanismState, condition = (t, u, integrator) -> true)
+function configuration_renormalizer(state::MechanismState, condition = (u, t, integrator) -> true)
     renormalize = let state = state # https://github.com/JuliaLang/julia/issues/15276
         function (integrator)
             q = view(integrator.u, 1 : num_positions(state))
