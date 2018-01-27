@@ -21,9 +21,9 @@ end
 
 function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     periodic_initialize = let controller = controller
-        function (c, t, u, integrator)
+        function (c, u, t, integrator)
             controller.docontrol[] = true
-            controller.initialize(c, t, u, integrator)
+            controller.initialize(c, u, t, integrator)
         end
     end
     f = let controller = controller
