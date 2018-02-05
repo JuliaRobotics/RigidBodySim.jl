@@ -18,7 +18,7 @@ function send_control_message(lcm::LCM, contents::Associative)
     version_major = 1
     version_minor = 1
     data = convert(Vector{UInt8}, JSON.json(contents))
-    msg = DrakeVisualizer.Comms.CommsT(utime, format, version_major, version_minor, data)
+    msg = RigidBodySim.CommsT(utime, format, version_major, version_minor, data)
     publish(lcm, RigidBodySim.LCM_CONTROL_CHANNEL, msg)
 end
 

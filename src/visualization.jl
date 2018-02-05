@@ -16,11 +16,11 @@ end
 
 function SimulationCommands(lcm::LCM)
     commands = SimulationCommands()
-    subscribe(lcm, LCM_CONTROL_CHANNEL, (channel, msg) -> handle_control_msg(commands, msg), DrakeVisualizer.Comms.CommsT)
+    subscribe(lcm, LCM_CONTROL_CHANNEL, (channel, msg) -> handle_control_msg(commands, msg), CommsT)
     commands
 end
 
-function handle_control_msg(commands::SimulationCommands, msg::DrakeVisualizer.Comms.CommsT)
+function handle_control_msg(commands::SimulationCommands, msg::CommsT)
     @assert msg.format == "rigid_body_sim_json"
     @assert msg.format_version_major == 1
     @assert msg.format_version_minor == 1
