@@ -18,8 +18,23 @@ function send_control_message(lcm::LCM, contents::Associative)
     version_major = 1
     version_minor = 1
     data = convert(Vector{UInt8}, JSON.json(contents))
-    msg = DrakeVisualizer.Comms.CommsT(utime, format, version_major, version_minor, data)
+    msg = RigidBodySim.CommsT(utime, format, version_major, version_minor, data)
     publish(lcm, RigidBodySim.LCM_CONTROL_CHANNEL, msg)
+end
+
+send_pause_message(lcm::LCM = LCM()) = send_control_message(lcm, Dict("pause" => nothing))
+send_terminate_message(lcm::LCM = LCM()) = send_control_message(LCM(), Dict("terminate" => nothing))
+
+function pause_message_sender(tpause::Number, pausecondition::Condition)
+    havepaused = Ref(false)
+    condition = (u, t, integrator) -> !havepaused[] && t >= tpause
+    action = function (integrator)
+        send_pause_message()
+        notify(pausecondition)
+        havepaused[] = true
+    end
+    initialize = (c, t, u, integrator) -> (havepaused[] = false; add_tstop!(integrator, tpause))
+    DiscreteCallback(condition, action, save_positions=(false, false), initialize = initialize)
 end
 
 @testset "compare to simulate" begin
@@ -57,16 +72,16 @@ end
         problem = ODEProblem(state, (0., tfinal))
 
         # Simulate for 3 seconds (wall time) and then send a termination command
-        @async (sleep(3.); send_control_message(LCM(), Dict("terminate" => nothing)))
+        @async (sleep(3.); send_terminate_message())
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
         println("last(sol.t) after early termination 1: $(last(sol.t))")
 
         # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
-        send_control_message(LCM(), Dict("terminate" => nothing))
+        send_terminate_message()
         sleep(0.1)
-        @async (sleep(3.); send_control_message(LCM(), Dict("terminate" => nothing)))
+        @async (sleep(3.); send_terminate_message())
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
@@ -74,19 +89,28 @@ end
 
         # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
         problem = ODEProblem(state, (0., 1.))
-        normaltime = @elapsed solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-        @show normaltime
-        pausetime = normaltime / 3
-        unpausetime = pausetime + normaltime * 3
-        @async (sleep(pausetime); send_control_message(LCM(), Dict("pause" => nothing)))
-        @async (sleep(unpausetime); send_control_message(LCM(), Dict("pause" => nothing)))
-        timewithpause = @elapsed solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-        @test timewithpause > normaltime * 2
+        pausetime = 0.5
+        pausecondition = Condition()
+        pauser = pause_message_sender(pausetime, pausecondition)
+        integrator = init(problem, RK4(), adaptive = false, dt = dt, callback = CallbackSet(vis_callbacks, pauser))
+        havepaused = Ref(false)
+        @async begin
+            wait(pausecondition)
+            sleep(0.5) # wait for message to reach command handler callback
+            integrator_time = integrator.t
+            @test integrator_time < pausetime + 0.1 # it takes a while for the pause message to reach the command handler callback
+            sleep(2.)
+            @test integrator.t == integrator_time # make sure simulation remains paused
+            havepaused[] = true
+            send_pause_message() # unpause
+        end
+        solve!(integrator)
+        @test havepaused[]
 
         # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
         problem = ODEProblem(state, (0., tfinal))
-        @async (sleep(3.); send_control_message(LCM(), Dict("pause" => nothing)))
-        @async (sleep(4.); send_control_message(LCM(), Dict("terminate" => nothing)))
+        @async (sleep(3.); send_pause_message())
+        @async (sleep(4.); send_terminate_message())
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
         @test sol.t[end] > 2 * dt
         @test sol.t[end] < tfinal
@@ -130,22 +154,22 @@ end
 
         # premature termination
         termination_time = 1.5
-        @async (sleep(termination_time); send_control_message(LCM(), Dict("terminate" => nothing)))
+        @async (sleep(termination_time); send_terminate_message())
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
         @test elapsed ≈ termination_time atol = 0.1
 
         # pause and unpause
         pause_time = 1.0
         unpause_time = 3.5
-        @async (sleep(pause_time); send_control_message(LCM(), Dict("pause" => nothing)))
-        @async (sleep(unpause_time); send_control_message(LCM(), Dict("pause" => nothing)))
+        @async (sleep(pause_time); send_pause_message())
+        @async (sleep(unpause_time); send_pause_message())
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
         @show elapsed
         @test elapsed ≈ final_time / realtime_rate + (unpause_time - pause_time) atol = 0.2 # higher atol because of pause poll int
 
         # pause and terminate
-        @async (sleep(pause_time); send_control_message(LCM(), Dict("pause" => nothing)))
-        @async (sleep(termination_time); send_control_message(LCM(), Dict("terminate" => nothing)))
+        @async (sleep(pause_time); send_pause_message())
+        @async (sleep(termination_time); send_terminate_message())
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
         @test elapsed ≈ termination_time atol = 0.2 # higher atol because of pause poll int
     finally
