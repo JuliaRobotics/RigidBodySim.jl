@@ -2,25 +2,14 @@ __precompile__()
 
 module RigidBodySim
 
-# Control
-export
-    PeriodicController,
-    zero_control!
+using Compat
+using Reexport
 
-# Util
-export
-    configuration_renormalizer
+@reexport using RigidBodyDynamics
+@reexport using RigidBodyTreeInspector
 
-# Visualization
-export
-    any_open_visualizer_windows,
-    new_visualizer_window
-
-using RigidBodyDynamics
 using OrdinaryDiffEq
 using DiffEqCallbacks
-using RigidBodyTreeInspector
-
 using LoopThrottle
 using JSON
 using LCMCore
@@ -29,10 +18,51 @@ using DrakeVisualizer
 using DataStructures: top
 using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
 
-include("lcmtypes/utime_t.jl")
-include("lcmtypes/comms_t.jl")
+using DocStringExtensions
+@template (FUNCTIONS, METHODS, MACROS) =
+    """
+    $(SIGNATURES)
+    $(DOCSTRING)
+    """
+
+@template (TYPES,) =
+    """
+    $(TYPEDEF)
+    $(DOCSTRING)
+    """
+
+# Select DifferentialEquations exports
+export
+    ODEProblem, # from DiffEqBase
+    init, # from DiffEqBase
+    solve!, # from DiffEqBase
+    solve, # from DiffEqBase
+    Tsit5, # from OrdinaryDiffEq
+    Vern7, # from OrdinaryDiffEq
+    RK4, # from OrdinaryDiffEq
+    CallbackSet # from DiffEqCallbacks
+
+# Control
+export
+    PeriodicController,
+    zero_control!
+
+# Visualization
+export
+    any_open_visualizer_windows,
+    new_visualizer_window
+
+# Util
+export
+    configuration_renormalizer
+
 include("control.jl")
 include("core.jl")
+
+include("lcmtypes/utime_t.jl")
+include("lcmtypes/comms_t.jl")
 include("visualization.jl")
+
+include("util.jl")
 
 end # module

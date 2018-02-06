@@ -80,14 +80,72 @@ function transform_publisher(state::MechanismState, vis::Visualizer, lcm::LCM; m
     DiscreteCallback(condition, action; save_positions = (false, false))
 end
 
+"""
+Create the DifferentialEquations.jl callbacks needed for publishing to and receiving commands from a
+[director](https://github.com/RobotLocomotion/director) visualizer instance during simulation.
+
+`max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
+"""
 function DiffEqBase.CallbackSet(vis::Visualizer, state::MechanismState; max_fps = 60.)
     commands = SimulationCommands(vis.core.lcm)
     CallbackSet(transform_publisher(state, vis, vis.core.lcm; max_fps = max_fps), command_handler(commands))
 end
 
+"""
+Return whether any [director](https://github.com/RobotLocomotion/director) visualizer windows are open.
+"""
 any_open_visualizer_windows() = DrakeVisualizer.any_open_windows()
+
+"""
+Open a new [director](https://github.com/RobotLocomotion/director) visualizer window.
+
+The director instance will be started with a script that handles communication between RigidBodySim.jl
+and the director instance.
+"""
 new_visualizer_window() = DrakeVisualizer.new_window(script = DRAKE_VISUALIZER_SCRIPT)
 
+"""
+Play back a visualization of a `DiffEqBase.ODESolution` obtained from a RigidBodySim.jl simulation.
+
+`vis` is a `DrakeVisualizer.Visualizer`. The easiest way to create a `Visualizer` for a robot is
+from a URDF, which can be parsed by [RigidBodyTreeInspector.jl](https://github.com/rdeits/RigidBodyTreeInspector.jl)'s `parse_urdf` function.
+
+`state` is a [`RigidBodyDynamics.MechanismState`](http://tkoolen.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState),
+representing the state of the mechanism that was simulated, and will be modified during the visualization.
+
+`animate` accepts the following keyword arguments:
+
+* `max_fps`: the maximum number of frames per second to draw. Default: `60.0`.
+* `realtime_rate`: can be used to slow down or speed up playback compared to wall time. A `realtime_rate` of `2`
+  will result in playback that is sped up 2x. Default: `1.0`.
+* `pause_pollint`: how often to poll for commands coming from the director window when playback is paused.
+
+# Examples
+
+Visualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:
+
+```jldoctest
+julia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq, RigidBodyTreeInspector
+
+julia> urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf");
+
+julia> mechanism = parse_urdf(Float64, urdf);
+
+julia> state = MechanismState(mechanism);
+
+julia> set_configuration!(state, [0.1; 0.2]);
+
+julia> problem = ODEProblem(state, (0., 2.));
+
+julia> sol = solve(problem, Vern7());
+
+julia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));
+
+julia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));
+
+julia> animate(vis, state, sol; realtime_rate = 0.5);
+```
+"""
 function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
         max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = DEFAULT_PAUSE_POLLINT)
     @assert max_fps > 0

@@ -1,14 +1,12 @@
 module RigidBodySimTest
 
 using RigidBodySim
-using RigidBodyDynamics
-using RigidBodyTreeInspector
-using OrdinaryDiffEq
-using DiffEqCallbacks
 
-using DrakeVisualizer
 using JSON
 using LCMCore
+
+import DiffEqCallbacks: DiscreteCallback
+import DiffEqBase: add_tstop!
 
 using Base.Test
 
@@ -183,8 +181,9 @@ end
     state = MechanismState(mechanism)
     controltimes = Float64[]
     initialize = (c, u, t, integrator) -> empty!(controltimes)
+    τ = similar(velocity(state))
     Δt = 0.25
-    controller = PeriodicController(state, Δt, function (τ, t, state)
+    controller = PeriodicController(τ, Δt, function (τ, t, state)
         push!(controltimes, t)
         τ[1] = sin(t)
         τ[2] = cos(t)
