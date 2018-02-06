@@ -118,7 +118,7 @@ representing the state of the mechanism that was simulated, and will be modified
 * `max_fps`: the maximum number of frames per second to draw. Default: `60.0`.
 * `realtime_rate`: can be used to slow down or speed up playback compared to wall time. A `realtime_rate` of `2`
   will result in playback that is sped up 2x. Default: `1.0`.
-* `pause_pollint`: how often to poll for commands coming from the director window when playback is paused.
+* `pause_pollint`: how often to poll for commands coming from the director window when playback is paused. Default: $DEFAULT_PAUSE_POLLINT.
 
 # Examples
 

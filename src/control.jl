@@ -15,7 +15,7 @@ PeriodicController(τ, Δt, control; initialize = DiffEqBase.INITIALIZE_DEFAULT,
 ```
 
 where `control` is a controller satisfying the standard RigidBodySim controller signature
-(`control(τ, Δt, state)`), Δt is the simulation time interval between calls to the
+(`control(τ, Δt, state)`), `Δt` is the simulation time interval between calls to the
 `control` function, and `τ` is used to call `control`.
 The `initialize` and `save_positions` keyword arguments are documented in
 the [`DiscreteCallback`](http://docs.juliadiffeq.org/release-4.0/features/callback_functions.html#DiscreteCallback-1)
@@ -30,10 +30,6 @@ controller can be called. Typically, users will not have to explicitly create
 this `PeriodicCallback`, as it is automatically created and
 added to the `ODEProblem` when the `PeriodicController` is passed into the
 following `DiffEqBase.ODEProblem` constructor overload:
-
-```julia
-DiffEqBase.ODEProblem(state::MechanismState, tspan, controller::PeriodicController; callback = nothing)
-```
 
 ```
 ODEProblem(state, tspan, controller::PeriodicController; callback)
