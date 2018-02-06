@@ -1,7 +1,7 @@
 using Compat, RigidBodySim, Documenter
 
 makedocs(
-    doctest = true,
+    doctest = false,
     modules = [RigidBodySim],
     checkdocs = :none, # because of the reexported functionality
     format = :html,
