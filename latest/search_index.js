@@ -93,7 +93,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Quick start guide",
     "title": "Quick start guide",
     "category": "section",
-    "text": "To get started, see this Jupyter notebook. To run it locally, you'll need the IJulia package."
+    "text": "To get started, see this Jupyter notebook. To run it locally, you\'ll need the IJulia package."
 },
 
 {
@@ -141,7 +141,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Details",
     "title": "RigidBodySim.zero_control!",
     "category": "Function",
-    "text": "zero_control!(τ, t, state)\n\n\nA 'zero' controller, i.e. one that sets all control torques to zero at all times.\n\n\n\n"
+    "text": "zero_control!(τ, t, state)\n\n\nA \'zero\' controller, i.e. one that sets all control torques to zero at all times.\n\n\n\n"
 },
 
 {
@@ -189,7 +189,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Details",
     "title": "RigidBodyTreeInspector.animate",
     "category": "Method",
-    "text": "animate(vis, state, sol; max_fps, realtime_rate, pause_pollint)\n\n\nPlay back a visualization of a DiffEqBase.ODESolution obtained from a RigidBodySim.jl simulation.\n\nvis is a DrakeVisualizer.Visualizer. The easiest way to create a Visualizer for a robot is from a URDF, which can be parsed by RigidBodyTreeInspector.jl's parse_urdf function.\n\nstate is a RigidBodyDynamics.MechanismState, representing the state of the mechanism that was simulated, and will be modified during the visualization.\n\nanimate accepts the following keyword arguments:\n\nmax_fps: the maximum number of frames per second to draw. Default: 60.0.\nrealtime_rate: can be used to slow down or speed up playback compared to wall time. A realtime_rate of 2 will result in playback that is sped up 2x. Default: 1.0.\npause_pollint: how often to poll for commands coming from the director window when playback is paused. Default: 0.05.\n\nExamples\n\nVisualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq, RigidBodyTreeInspector\n\njulia> urdf = Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\");\n\njulia> mechanism = parse_urdf(Float64, urdf);\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> problem = ODEProblem(state, (0., 2.));\n\njulia> sol = solve(problem, Vern7());\n\njulia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));\n\njulia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));\n\njulia> animate(vis, state, sol; realtime_rate = 0.5);\n\n\n\n"
+    "text": "animate(vis, state, sol; max_fps, realtime_rate, pause_pollint)\n\n\nPlay back a visualization of a DiffEqBase.ODESolution obtained from a RigidBodySim.jl simulation.\n\nvis is a DrakeVisualizer.Visualizer. The easiest way to create a Visualizer for a robot is from a URDF, which can be parsed by RigidBodyTreeInspector.jl\'s parse_urdf function.\n\nstate is a RigidBodyDynamics.MechanismState, representing the state of the mechanism that was simulated, and will be modified during the visualization.\n\nanimate accepts the following keyword arguments:\n\nmax_fps: the maximum number of frames per second to draw. Default: 60.0.\nrealtime_rate: can be used to slow down or speed up playback compared to wall time. A realtime_rate of 2 will result in playback that is sped up 2x. Default: 1.0.\npause_pollint: how often to poll for commands coming from the director window when playback is paused. Default: 0.05.\n\nExamples\n\nVisualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq, RigidBodyTreeInspector\n\njulia> urdf = Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\");\n\njulia> mechanism = parse_urdf(Float64, urdf);\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> problem = ODEProblem(state, (0., 2.));\n\njulia> sol = solve(problem, Vern7());\n\njulia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));\n\njulia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));\n\njulia> animate(vis, state, sol; realtime_rate = 0.5);\n\n\n\n"
 },
 
 {
@@ -205,7 +205,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Details",
     "title": "RigidBodySim.configuration_renormalizer",
     "category": "Function",
-    "text": "configuration_renormalizer(state)\nconfiguration_renormalizer(state, condition)\n\n\nconfiguration_renormalizer can be used to create a callback that projects the configuration of a mechanism's state onto the configuration manifold. This may be necessary for mechanism's with e.g. quaternion-parameterized orientations as part of their joint configuration vectors, as numerical integration can cause the configuration to drift away from the unit norm constraints.\n\nThe callback is implemented as a DiffEqCallbacks.DiscreteCallback By default, it is called at every integrator time step.\n\n\n\n"
+    "text": "configuration_renormalizer(state)\nconfiguration_renormalizer(state, condition)\n\n\nconfiguration_renormalizer can be used to create a callback that projects the configuration of a mechanism\'s state onto the configuration manifold. This may be necessary for mechanism\'s with e.g. quaternion-parameterized orientations as part of their joint configuration vectors, as numerical integration can cause the configuration to drift away from the unit norm constraints.\n\nThe callback is implemented as a DiffEqCallbacks.DiscreteCallback By default, it is called at every integrator time step.\n\n\n\n"
 },
 
 {
