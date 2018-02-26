@@ -73,17 +73,17 @@ julia> controlcalls[]
 1001
 ```
 """
-struct PeriodicController{Tau, T<:Number, C, I}
-    τ::Vector{Tau}
+struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
+    τ::Tau
     Δt::T
     control::C
     initialize::I
     save_positions::Tuple{Bool, Bool}
     docontrol::Base.RefValue{Bool}
 
-    function PeriodicController(τ::Vector{Tau}, Δt::T, control::C;
+    function PeriodicController(τ::Tau, Δt::T, control::C;
             initialize::I = DiffEqBase.INITIALIZE_DEFAULT,
-            save_positions = (false, false)) where {Tau, T<:Number, C, I}
+            save_positions = (false, false)) where {Tau<:AbstractVector, T<:Number, C, I}
         new{Tau, T, C, I}(τ, Δt, control, initialize, save_positions, Ref(true))
     end
 end

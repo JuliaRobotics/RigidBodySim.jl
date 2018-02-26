@@ -10,7 +10,7 @@ By default, it is called at every integrator time step.
 function configuration_renormalizer(state::MechanismState, condition = (u, t, integrator) -> true)
     renormalize = let state = state # https://github.com/JuliaLang/julia/issues/15276
         function (integrator)
-            q = RigidBodyDynamics.fastview(integrator.u, 1 : num_positions(state))
+            q = view(integrator.u, 1 : num_positions(state)) # TODO: allocates
             set_configuration!(state, q)
             normalize_configuration!(state)
             copy!(q, configuration(state))
