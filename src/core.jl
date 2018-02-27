@@ -4,23 +4,22 @@ function _create_ode_problem(state::MechanismState{X, M, C}, tspan, control!, ca
 
     result = DynamicsResult{C}(state.mechanism)
     τ = similar(velocity(state))
-    closed_loop_dynamics! = let state = state, result = result, τ = τ # https://github.com/JuliaLang/julia/issues/15276
+    q̇ = similar(configuration(state))
+    closed_loop_dynamics! = let state = state, result = result, τ = τ, q̇ = q̇ # https://github.com/JuliaLang/julia/issues/15276
         function (ẋ, x, p, t)
             # TODO: unpack function in RigidBodyDynamics:
             nq = num_positions(state)
             nv = num_velocities(state)
             ns = num_additional_states(state)
 
-            q̇ = view(ẋ, 1 : nq)
-            v̇ = view(ẋ, nq + 1 : nq + nv)
-            ṡ = view(ẋ, nq + nv + 1 : nq + nv + ns)
-
             set!(state, x)
             configuration_derivative!(q̇, state)
             control!(τ, t, state)
             dynamics!(result, state, τ)
-            v̇[:] = result.v̇
-            ṡ[:] = result.ṡ
+
+            copy!(ẋ, 1, q̇, 1, nq)
+            copy!(ẋ, nq + 1, result.v̇, 1, nv)
+            copy!(ẋ, nq + nv + 1, result.ṡ, 1, ns)
 
             ẋ
         end
