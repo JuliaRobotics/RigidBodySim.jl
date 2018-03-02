@@ -65,7 +65,7 @@ function transform_publisher(state::MechanismState, vis::Visualizer, lcm::LCM; m
     last_update_time = Ref(-Inf)
     condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
         function (u, t, integrator)
-            last_time_step = length(integrator.opts.tstops) == 1 && t == top(integrator.opts.tstops)
+            last_time_step = length(integrator.opts.tstops) == 1 && t == DataStructures.top(integrator.opts.tstops)
             last_time_step || time() - last_update_time[] >= min_Δt
         end
     end

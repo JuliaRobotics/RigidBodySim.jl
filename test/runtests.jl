@@ -1,5 +1,6 @@
 module RigidBodySimTest
 
+using RigidBodyDynamics
 using RigidBodySim
 
 using JSON
@@ -7,6 +8,7 @@ using LCMCore
 
 import DiffEqCallbacks: DiscreteCallback
 import DiffEqBase: add_tstop!
+import RigidBodyTreeInspector: settransform!
 
 using Base.Test
 
