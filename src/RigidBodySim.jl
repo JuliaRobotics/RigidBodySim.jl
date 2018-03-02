@@ -3,22 +3,19 @@ __precompile__()
 module RigidBodySim
 
 using Compat
-using Reexport
-
-@reexport using RigidBodyDynamics
-@reexport using RigidBodyTreeInspector
-
+using RigidBodyDynamics
+using RigidBodyTreeInspector
 using OrdinaryDiffEq
 using DiffEqCallbacks
 using LoopThrottle
 using JSON
 using LCMCore
 using DrakeVisualizer
-
-using DataStructures: top
-using RigidBodyDynamics: configuration_derivative! # TODO: export from RigidBodyDynamics
-
 using DocStringExtensions
+
+import DataStructures
+import RigidBodyTreeInspector: animate, Visualizer, settransform!
+
 @template (FUNCTIONS, METHODS, MACROS) =
     """
     $(SIGNATURES)
@@ -41,6 +38,12 @@ export
     Vern7, # from OrdinaryDiffEq
     RK4, # from OrdinaryDiffEq
     CallbackSet # from DiffEqCallbacks
+
+# select RigidBodyTreeInspector exports
+export
+    animate,
+    Visualizer,
+    settransform!
 
 # Control
 export
