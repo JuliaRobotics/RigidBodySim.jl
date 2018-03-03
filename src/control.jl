@@ -1,7 +1,26 @@
-"""
-A 'zero' controller, i.e. one that sets all control torques to zero at all times.
-"""
-zero_control!(τ::AbstractVector, t, state) = τ[:] = 0
+module Control
+
+export
+    PeriodicController
+
+using DocStringExtensions
+@template (FUNCTIONS, METHODS, MACROS) =
+    """
+    $(SIGNATURES)
+    $(DOCSTRING)
+    """
+
+@template (TYPES,) =
+    """
+    $(TYPEDEF)
+    $(DOCSTRING)
+    """
+
+import RigidBodySim.Core: create_ode_problem
+import DiffEqBase
+import DiffEqBase: ODEProblem, CallbackSet, u_modified!
+import DiffEqCallbacks: PeriodicCallback
+import RigidBodyDynamics: MechanismState
 
 """
 A `PeriodicController` can be used to simulate a digital controller that runs at a
@@ -88,7 +107,7 @@ struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
     end
 end
 
-function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
+function PeriodicCallback(controller::PeriodicController)
     periodic_initialize = let controller = controller
         function (c, u, t, integrator)
             controller.docontrol[] = true
@@ -112,6 +131,8 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
     τ[:] = controller.τ
 end
 
-function DiffEqBase.ODEProblem(state::MechanismState, tspan, controller::PeriodicController; callback = nothing)
-    _create_ode_problem(state, tspan, controller, CallbackSet(PeriodicCallback(controller), callback))
+function ODEProblem(state::MechanismState, tspan, controller::PeriodicController; callback = nothing)
+    create_ode_problem(state, tspan, controller, CallbackSet(PeriodicCallback(controller), callback))
 end
+
+end # module

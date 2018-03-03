@@ -18,8 +18,8 @@ function send_control_message(lcm::LCM, contents::Associative)
     version_major = 1
     version_minor = 1
     data = convert(Vector{UInt8}, JSON.json(contents))
-    msg = RigidBodySim.CommsT(utime, format, version_major, version_minor, data)
-    publish(lcm, RigidBodySim.LCM_CONTROL_CHANNEL, msg)
+    msg = RigidBodySim.LCMTypes.CommsT(utime, format, version_major, version_minor, data)
+    publish(lcm, RigidBodySim.Visualization.LCM_CONTROL_CHANNEL, msg)
 end
 
 send_pause_message(lcm::LCM = LCM()) = send_control_message(lcm, Dict("pause" => nothing))
