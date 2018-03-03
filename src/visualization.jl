@@ -1,3 +1,33 @@
+module Visualization
+
+export
+    any_open_visualizer_windows,
+    new_visualizer_window,
+    animate
+
+using DocStringExtensions
+@template (FUNCTIONS, METHODS, MACROS) =
+    """
+    $(SIGNATURES)
+    $(DOCSTRING)
+    """
+
+@template (TYPES,) =
+    """
+    $(TYPEDEF)
+    $(DOCSTRING)
+    """
+
+import JSON
+import LCMCore: LCM, subscribe, publish
+import RigidBodySim.LCMTypes: CommsT, UTimeT
+import DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
+import DataStructures
+import DrakeVisualizer
+import DrakeVisualizer: Visualizer, settransform!
+import RigidBodyDynamics: MechanismState, set!, normalize_configuration!
+import LoopThrottle: @throttle
+
 const DRAKE_VISUALIZER_SCRIPT = joinpath(@__DIR__, "rigid_body_sim_visualizer_script.py")
 const LCM_CONTROL_CHANNEL = "RIGID_BODY_SIM_CONTROL"
 const LCM_TIME_CHANNEL = "RIGID_BODY_SIM_TIME"
@@ -86,7 +116,7 @@ Create the DifferentialEquations.jl callbacks needed for publishing to and recei
 
 `max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
 """
-function DiffEqBase.CallbackSet(vis::Visualizer, state::MechanismState; max_fps = 60.)
+function CallbackSet(vis::Visualizer, state::MechanismState; max_fps = 60.)
     commands = SimulationCommands(vis.core.lcm)
     CallbackSet(transform_publisher(state, vis, vis.core.lcm; max_fps = max_fps), command_handler(commands))
 end
@@ -146,7 +176,7 @@ julia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));
 julia> animate(vis, state, sol; realtime_rate = 0.5);
 ```
 """
-function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
+function animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
         max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = DEFAULT_PAUSE_POLLINT)
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
@@ -172,3 +202,5 @@ function RigidBodyTreeInspector.animate(vis::Visualizer, state::MechanismState, 
         yield()
     end max_rate = max_fps
 end
+
+end # module
