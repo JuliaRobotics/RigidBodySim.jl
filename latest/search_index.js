@@ -124,7 +124,7 @@ var documenterSearchIndex = {"docs": [
     "location": "details.html#DiffEqBase.ODEProblem",
     "page": "Details",
     "title": "DiffEqBase.ODEProblem",
-    "category": "Type",
+    "category": "type",
     "text": "ODEProblem(state, tspan)\nODEProblem(state, tspan, control!; callback)\n\n\nCreate a DiffEqBase.ODEProblem representing the closed-loop dynamics of a RigidBodyDynamics.Mechanism.\n\nThe initial state is given by the state argument (a RigidBodyDynamics.MechanismState). The state argument will be modified during the simulation, as it is used to evaluate the dynamics.\n\nThe control! argument is a callable with the signature control!(τ, t, state), where τ is the torque vector to be set in the body of control!, t is the current time, and state is a MechanismState object. By default, control! is zero_control!.\n\nThe callback keyword argument can be used to pass in additional DifferentialEquations.jl callbacks.\n\nExamples\n\nThe following is a ten second simulation of the passive dynamics of an Acrobot (double pendulum) with a Vern7 integrator (see DifferentialEquations.jl documentation).\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq\n\njulia> mechanism = parse_urdf(Float64, Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\"))\nSpanning tree:\nVertex: world (root)\n  Vertex: base_link, Edge: base_link_to_world\n    Vertex: upper_link, Edge: shoulder\n      Vertex: lower_link, Edge: elbow\nNo non-tree joints.\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> problem = ODEProblem(state, (0., 10.))\nDiffEqBase.ODEProblem with uType Array{Float64,1} and tType Float64. In-place: true\ntimespan: (0.0, 10.0)\nu0: [0.1, 0.2, 0.0, 0.0]\n\njulia> solution = solve(problem, Vern7());\n\n\n\n"
 },
 
@@ -140,7 +140,7 @@ var documenterSearchIndex = {"docs": [
     "location": "details.html#RigidBodySim.Core.zero_control!",
     "page": "Details",
     "title": "RigidBodySim.Core.zero_control!",
-    "category": "Function",
+    "category": "function",
     "text": "zero_control!(τ, t, state)\n\n\nA \'zero\' controller, i.e. one that sets all control torques to zero at all times.\n\n\n\n"
 },
 
@@ -148,7 +148,7 @@ var documenterSearchIndex = {"docs": [
     "location": "details.html#RigidBodySim.Control.PeriodicController",
     "page": "Details",
     "title": "RigidBodySim.Control.PeriodicController",
-    "category": "Type",
+    "category": "type",
     "text": "struct PeriodicController{Tau<:(AbstractArray{T,1} where T), T<:Number, C, I}\n\nA PeriodicController can be used to simulate a digital controller that runs at a fixed rate (in terms of simulation time). It does so by performing a zero-order hold on a provided control function.\n\nPeriodicControllers can be constructed using\n\nPeriodicController(τ, Δt, control; initialize = DiffEqBase.INITIALIZE_DEFAULT, save_positions = (false, false))\n\nwhere control is a controller satisfying the standard RigidBodySim controller signature (control(τ, Δt, state)), Δt is the simulation time interval between calls to the control function, and τ is used to call control. The initialize and save_positions keyword arguments are documented in the DiscreteCallback section of the DifferentialEquations documentation.\n\nPeriodicControllers are callable objects, and themselves fit the standard RigidBodySim controller signature.\n\nA DiffEqCallbacks.PeriodicCallback can be created from a PeriodicController, and is used to stop ODE integration exactly every Δt seconds, so that the controller can be called. Typically, users will not have to explicitly create this PeriodicCallback, as it is automatically created and added to the ODEProblem when the PeriodicController is passed into the following DiffEqBase.ODEProblem constructor overload:\n\nODEProblem(state, tspan, controller::PeriodicController; callback)\n\nExamples\n\nIn the following example, a PeriodicController is used to simulate a digital PD controller running at a fixed rate of 200 Hz.\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq\n\njulia> mechanism = parse_urdf(Float64, Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\"));\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> controlcalls = Ref(0);\n\njulia> pdcontrol!(τ, t, state) = (controlcalls[] += 1; τ .= -20 .* velocity(state) .- 100 .* configuration(state));\n\njulia> τ = zeros(velocity(state)); Δt = 1 / 200\n0.005\n\njulia> problem = ODEProblem(state, (0., 5.), PeriodicController(τ, Δt, pdcontrol!));\n\njulia> sol = solve(problem, Tsit5());\n\njulia> sol.u[end]\n4-element Array{Float64,1}:\n -3.25923e-5\n -1.67942e-5\n  8.16715e-7\n  1.55292e-8\n\njulia> @assert all(x -> isapprox(x, 0, atol = 1e-4), sol.u[end]) # ensure state converges to zero\n\njulia> controlcalls[]\n1001\n\n\n\n"
 },
 
@@ -172,7 +172,7 @@ var documenterSearchIndex = {"docs": [
     "location": "details.html#RigidBodySim.Core.configuration_renormalizer",
     "page": "Details",
     "title": "RigidBodySim.Core.configuration_renormalizer",
-    "category": "Function",
+    "category": "function",
     "text": "configuration_renormalizer(state)\nconfiguration_renormalizer(state, condition)\n\n\nconfiguration_renormalizer can be used to create a callback that projects the configuration of a mechanism\'s state onto the configuration manifold. This may be necessary for mechanism\'s with e.g. quaternion-parameterized orientations as part of their joint configuration vectors, as numerical integration can cause the configuration to drift away from the unit norm constraints.\n\nThe callback is implemented as a DiffEqCallbacks.DiscreteCallback By default, it is called at every integrator time step.\n\n\n\n"
 },
 
