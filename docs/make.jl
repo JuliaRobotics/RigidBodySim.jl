@@ -16,7 +16,7 @@ makedocs(
 
 deploydocs(
     deps = nothing,
-    repo = "github.com/tkoolen/RigidBodySim.jl.git",
+    repo = "github.com/JuliaRobotics/RigidBodySim.jl.git",
     target = "build",
     make = nothing,
     julia = "0.6",
