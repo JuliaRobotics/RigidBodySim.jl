@@ -77,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Citing this library",
     "category": "section",
-    "text": "@misc{rigidbodysimjl,\n author = \"Twan Koolen and contributors\",\n title = \"RigidBodySim.jl\",\n year = 2016,\n url = \"https://github.com/tkoolen/RigidBodySim.jl\"\n}"
+    "text": "@misc{rigidbodysimjl,\n author = \"Twan Koolen and contributors\",\n title = \"RigidBodySim.jl\",\n year = 2016,\n url = \"https://github.com/JuliaRobotics/RigidBodySim.jl\"\n}"
 },
 
 {
