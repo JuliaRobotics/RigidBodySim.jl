@@ -36,7 +36,7 @@ zero_control!(τ::AbstractVector, t, state) = τ[:] = 0
 Create a `DiffEqBase.ODEProblem` representing the closed-loop dynamics of a
 `RigidBodyDynamics.Mechanism`.
 
-The initial state is given by the `state` argument (a [`RigidBodyDynamics.MechanismState`](http://tkoolen.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState)).
+The initial state is given by the `state` argument (a [`RigidBodyDynamics.MechanismState`](http://JuliaRobotics.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState)).
 The `state` argument will be modified during the simulation, as it is used to evaluate the dynamics.
 
 The `control!` argument is a callable with the signature `control!(τ, t, state)`, where `τ` is the

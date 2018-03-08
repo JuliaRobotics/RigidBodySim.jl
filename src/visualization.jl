@@ -140,7 +140,7 @@ Play back a visualization of a `DiffEqBase.ODESolution` obtained from a RigidBod
 `vis` is a `DrakeVisualizer.Visualizer`. The easiest way to create a `Visualizer` for a robot is
 from a URDF, which can be parsed by [RigidBodyTreeInspector.jl](https://github.com/rdeits/RigidBodyTreeInspector.jl)'s `parse_urdf` function.
 
-`state` is a [`RigidBodyDynamics.MechanismState`](http://tkoolen.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState),
+`state` is a [`RigidBodyDynamics.MechanismState`](http://JuliaRobotics.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState),
 representing the state of the mechanism that was simulated, and will be modified during the visualization.
 
 `animate` accepts the following keyword arguments:
