@@ -4,10 +4,6 @@ os:
   - linux
 julia:
   - 0.6
-branches:
-  only:
-    - master
-    - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
 notifications:
   email: false
 git:
