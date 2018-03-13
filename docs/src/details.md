@@ -26,7 +26,7 @@ PeriodicController
 DiffEqBase.CallbackSet(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState)
 any_open_visualizer_windows
 new_visualizer_window
-RigidBodyTreeInspector.animate(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState, ::DiffEqBase.ODESolution)
+animate(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState, ::DiffEqBase.ODESolution)
 ```
 
 ## Utilities
