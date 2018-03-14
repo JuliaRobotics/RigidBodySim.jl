@@ -161,11 +161,43 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "details.html#DiffEqBase.CallbackSet-Tuple{DrakeVisualizer.Visualizer,RigidBodyDynamics.MechanismState}",
+    "page": "Details",
+    "title": "DiffEqBase.CallbackSet",
+    "category": "method",
+    "text": "CallbackSet(vis, state; max_fps)\n\n\nCreate the DifferentialEquations.jl callbacks needed for publishing to and receiving commands from a director visualizer instance during simulation.\n\nmax_fps is the maximum number of frames per second (in terms of wall time) to draw. Default: 60.0.\n\n\n\n"
+},
+
+{
+    "location": "details.html#RigidBodySim.Visualization.any_open_visualizer_windows",
+    "page": "Details",
+    "title": "RigidBodySim.Visualization.any_open_visualizer_windows",
+    "category": "function",
+    "text": "any_open_visualizer_windows()\n\n\nReturn whether any director visualizer windows are open.\n\n\n\n"
+},
+
+{
+    "location": "details.html#RigidBodySim.Visualization.new_visualizer_window",
+    "page": "Details",
+    "title": "RigidBodySim.Visualization.new_visualizer_window",
+    "category": "function",
+    "text": "new_visualizer_window()\n\n\nOpen a new director visualizer window.\n\nThe director instance will be started with a script that handles communication between RigidBodySim.jl and the director instance.\n\n\n\n"
+},
+
+{
+    "location": "details.html#RigidBodySim.Visualization.animate-Tuple{DrakeVisualizer.Visualizer,RigidBodyDynamics.MechanismState,DiffEqBase.ODESolution}",
+    "page": "Details",
+    "title": "RigidBodySim.Visualization.animate",
+    "category": "method",
+    "text": "animate(vis, state, sol; max_fps, realtime_rate, pause_pollint)\n\n\nPlay back a visualization of a DiffEqBase.ODESolution obtained from a RigidBodySim.jl simulation.\n\nvis is a DrakeVisualizer.Visualizer. The easiest way to create a Visualizer for a robot is from a URDF, which can be parsed by RigidBodyTreeInspector.jl\'s parse_urdf function.\n\nstate is a RigidBodyDynamics.MechanismState, representing the state of the mechanism that was simulated, and will be modified during the visualization.\n\nanimate accepts the following keyword arguments:\n\nmax_fps: the maximum number of frames per second to draw. Default: 60.0.\nrealtime_rate: can be used to slow down or speed up playback compared to wall time. A realtime_rate of 2 will result in playback that is sped up 2x. Default: 1.0.\npause_pollint: how often to poll for commands coming from the director window when playback is paused. Default: 0.05.\n\nExamples\n\nVisualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq, RigidBodyTreeInspector\n\njulia> urdf = Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\");\n\njulia> mechanism = parse_urdf(Float64, urdf);\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> problem = ODEProblem(state, (0., 2.));\n\njulia> sol = solve(problem, Vern7());\n\njulia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));\n\njulia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));\n\njulia> animate(vis, state, sol; realtime_rate = 0.5);\n\n\n\n"
+},
+
+{
     "location": "details.html#Visualization-1",
     "page": "Details",
     "title": "Visualization",
     "category": "section",
-    "text": "DiffEqBase.CallbackSet(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState)\nany_open_visualizer_windows\nnew_visualizer_window\nRigidBodyTreeInspector.animate(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState, ::DiffEqBase.ODESolution)"
+    "text": "DiffEqBase.CallbackSet(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState)\nany_open_visualizer_windows\nnew_visualizer_window\nanimate(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState, ::DiffEqBase.ODESolution)"
 },
 
 {
