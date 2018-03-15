@@ -34,7 +34,8 @@ export
 # Core
 export
     configuration_renormalizer,
-    zero_control!
+    zero_control!,
+    RealtimeRateLimiter
 
 # Control
 export

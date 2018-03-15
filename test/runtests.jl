@@ -135,6 +135,24 @@ end
     @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 end
 
+@testset "RealtimeRateLimiter" begin
+    du = [0; 0]
+    u0 = [0.; 0.]
+    dynamics = (u, p, t) -> eltype(u).(du)
+    tmin = 10.1
+    tmax = 12.2
+    for max_rate in [1.3, 0.7]
+        prob = ODEProblem(dynamics, u0, (tmin, tmax))
+        rate_limiter = RealtimeRateLimiter(max_rate = max_rate)
+        sol = solve(prob, Tsit5(); callback = rate_limiter)
+        soltime = @elapsed solve(prob, Tsit5(); callback = rate_limiter)
+        expected = (tmax - tmin) / max_rate
+        @show soltime
+        @show expected
+        @test soltime ≈ expected atol = 0.3
+    end
+end
+
 @testset "ODESolution animation" begin
     visualizer_process = new_visualizer_window(); sleep(1)
     try
