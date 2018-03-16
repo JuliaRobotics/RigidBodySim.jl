@@ -8,3 +8,11 @@
 RigidBodySim provides Julia tools for simulation and visualization of systems of interconnected rigid bodies (both passive and controlled), built on top of [RigidBodyDynamics](https://github.com/JuliaRobotics/RigidBodyDynamics.jl), [DifferentialEquations](https://github.com/JuliaDiffEq/DifferentialEquations.jl), and [RigidBodyTreeInspector](https://github.com/rdeits/RigidBodyTreeInspector.jl).
 
 See the [latest documentation](https://JuliaRobotics.github.io/RigidBodySim.jl/latest) for more information.
+
+# Demo video
+
+The video below shows Atlas walking using the MIT Robot Locomotion Group controller, simulated in realtime using RigidBodySim.jl.
+
+[![Watch the demo video](https://user-images.githubusercontent.com/2585880/37498721-3c25bb8a-2896-11e8-8c14-91c97e46d0d0.png)](https://player.vimeo.com/video/260344845)
+
+Off-screen, commands are being given to the robot using a separate user interface. The controller is unfortunately hard to set up, so a hands-on version of this demo is currently not available.
