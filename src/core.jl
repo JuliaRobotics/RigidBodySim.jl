@@ -2,7 +2,8 @@ module Core
 
 export
     configuration_renormalizer,
-    zero_control!
+    zero_control!,
+    RealtimeRateLimiter
 
 using DocStringExtensions
 @template (FUNCTIONS, METHODS, MACROS) =
@@ -19,6 +20,8 @@ using DocStringExtensions
 
 import DiffEqBase:
     ODEProblem, DiscreteCallback, u_modified!
+import DiffEqCallbacks:
+    PeriodicCallback
 import RigidBodyDynamics:
     MechanismState, DynamicsResult,
     velocity, configuration,
@@ -130,5 +133,61 @@ function configuration_renormalizer(state::MechanismState, condition = (u, t, in
     DiscreteCallback(condition, renormalize; save_positions = (false, false))
 end
 
+# TODO: move to DiffEqCallbacks:
+mutable struct RealtimeRateLimiterState{T}
+    simtime0::T
+    walltime0::Float64
+    reset::Bool
+    RealtimeRateLimiterState{T}() where {T} = new{T}(zero(T), 0.0, true)
+end
+
+"""
+    RealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 30; save_positions = (false, false))
+
+A `DiscreteCallback` that limit the rate of integration so that integration time `t`
+increases at a rate no higher than `max_rate` compared to wall time.
+
+A `RealtimeRateLimiter` can be used, for example, if you want to simulate a physical system
+including its timing characteristics. Specific use cases may include realtime animation
+and user interaction during the simulation.
+
+The `poll_interval` keyword argument can be used to control how often the integration is
+stopped to check whether to sleep (and for how long). Specifically, this operation happens
+every `poll_interval / max_rate` *in terms of integration time*, which corresponds to approximately
+every `poll_interval` seconds *wall time* if `max_rate` is actually achieved.
+"""
+function RealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 60, save_positions = (false, false))
+    T = promote_type(typeof(max_rate), typeof(poll_interval))
+    state = RealtimeRateLimiterState{T}()
+    limit_rate = let state = state, max_rate = max_rate, poll_interval = poll_interval # https://github.com/JuliaLang/julia/issues/15276
+        function (integrator)
+            simtime = integrator.t
+            if state.reset
+                state.simtime0 = simtime
+                state.walltime0 = time()
+                state.reset = false
+            else
+                Δsimtime = simtime - state.simtime0
+                minΔwalltime = Δsimtime / max_rate
+                Δwalltime = time() - state.walltime0
+                sleeptime = Δsimtime / max_rate - Δwalltime
+                if sleeptime > 0
+                    sleep(sleeptime)
+                end
+                # Note: more accurate results can be achieved by never doing the following reset,
+                # (since there's no accumulated drift), but if there's a slowdown in
+                # integration rate at some point, the maximum rate would not be enforced after
+                # the slowdown
+                state.simtime0 = simtime
+                state.walltime0 = time()
+            end
+            u_modified!(integrator, false)
+        end
+    end
+    initialize = let state = state
+        (c, u, t, integrator) -> (state.reset = true)
+    end
+    PeriodicCallback(limit_rate, poll_interval / max_rate; initialize = initialize, save_positions = save_positions)
+end
 
 end # module
