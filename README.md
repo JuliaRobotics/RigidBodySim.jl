@@ -7,7 +7,7 @@
 
 RigidBodySim provides Julia tools for simulation and visualization of systems of interconnected rigid bodies (both passive and controlled), built on top of [RigidBodyDynamics](https://github.com/JuliaRobotics/RigidBodyDynamics.jl), [DifferentialEquations](https://github.com/JuliaDiffEq/DifferentialEquations.jl), and [RigidBodyTreeInspector](https://github.com/rdeits/RigidBodyTreeInspector.jl).
 
-See the [latest documentation](https://JuliaRobotics.github.io/RigidBodySim.jl/latest) for more information.
+See the [latest documentation](https://JuliaRobotics.github.io/RigidBodySim.jl/latest) and the [quick start guide](https://nbviewer.jupyter.org/github/JuliaRobotics/RigidBodySim.jl/blob/master/notebooks/Quick%20start%20guide.ipynb) for more information and examples.
 
 # Demo video
 
