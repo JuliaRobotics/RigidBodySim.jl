@@ -141,7 +141,7 @@ end
     dynamics = (u, p, t) -> eltype(u).(du)
     tmin = 10.1
     tmax = 12.2
-    for max_rate in [1.3, 0.7]
+    for max_rate in [2.0, 0.5]
         prob = ODEProblem(dynamics, u0, (tmin, tmax))
         rate_limiter = RealtimeRateLimiter(max_rate = max_rate)
         sol = solve(prob, Tsit5(); callback = rate_limiter)
@@ -149,7 +149,7 @@ end
         expected = (tmax - tmin) / max_rate
         @show soltime
         @show expected
-        @test soltime ≈ expected atol = 0.3
+        @test soltime ≈ expected atol = 0.5
     end
 end
 
