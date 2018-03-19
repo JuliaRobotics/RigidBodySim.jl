@@ -208,6 +208,7 @@ end
         @async (sleep(pause_time); send_pause_message())
         @async (sleep(termination_time); send_terminate_message())
         elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+        @show elapsed
         @test elapsed ≈ termination_time atol = 0.2 # higher atol because of pause poll int
     finally
         kill(visualizer_process)
