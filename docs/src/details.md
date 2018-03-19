@@ -10,13 +10,18 @@ Order   = [:type, :function, :macro]
 ## ODE problem creation
 
 ```@docs
-ODEProblem
+Dynamics
+```
+
+```@docs
+ODEProblem(::RigidBodySim.Dynamics, ::Union{Base.AbstractVector, RigidBodyDynamics.MechanismState}, tspan)
 ```
 
 ## [Control](@id control)
 
 ```@docs
 zero_control!
+controlcallback
 PeriodicController
 ```
 

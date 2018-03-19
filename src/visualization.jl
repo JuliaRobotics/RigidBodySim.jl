@@ -102,7 +102,7 @@ function transform_publisher(state::MechanismState, vis::Visualizer, lcm::LCM; m
     action = let state = state, vis = vis, last_update_time = last_update_time, time_msg = time_msg, lcm = lcm
         function (integrator)
             last_update_time[] = time()
-            set!(state, integrator.u)
+            copy!(state, integrator.u)
             visualize(vis, integrator.t, state)
             u_modified!(integrator, false)
         end
@@ -165,7 +165,7 @@ julia> state = MechanismState(mechanism);
 
 julia> set_configuration!(state, [0.1; 0.2]);
 
-julia> problem = ODEProblem(state, (0., 2.));
+julia> problem = ODEProblem(Dynamics(mechanism), state, (0., 2.));
 
 julia> sol = solve(problem, Vern7());
 
@@ -173,7 +173,7 @@ julia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));
 
 julia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));
 
-julia> animate(vis, state, sol; realtime_rate = 0.5);
+julia> RigidBodySim.animate(vis, state, sol; realtime_rate = 0.5);
 ```
 """
 function animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
@@ -194,7 +194,7 @@ function animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
         end
         commands.terminate && (commands.terminate = false; break)
         x = sol(t)
-        set!(state, x)
+        copy!(state, x)
         normalize_configuration!(state)
         visualize(vis, t, state)
         framenum += 1

@@ -33,6 +33,8 @@ export
 
 # Core
 export
+    Dynamics,
+    controlcallback,
     configuration_renormalizer,
     zero_control!,
     RealtimeRateLimiter
