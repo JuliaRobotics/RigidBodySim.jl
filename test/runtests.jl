@@ -45,13 +45,13 @@ end
 
     state = MechanismState(mechanism)
     rand!(state)
-    x0 = state_vector(state) # TODO: Vector constructor
+    x0 = Vector(state)
 
     final_time = 5.
     problem = ODEProblem(state, (0., final_time))
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
 
-    set!(state, x0)
+    copy!(state, x0)
     ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
 
     @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
@@ -131,7 +131,7 @@ end
     problem = ODEProblem(state, (0., 1e-3))
     sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
 
-    set!(state, sol[end])
+    copy!(state, sol[end])
     @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 end
 

@@ -102,7 +102,7 @@ function transform_publisher(state::MechanismState, vis::Visualizer, lcm::LCM; m
     action = let state = state, vis = vis, last_update_time = last_update_time, time_msg = time_msg, lcm = lcm
         function (integrator)
             last_update_time[] = time()
-            set!(state, integrator.u)
+            copy!(state, integrator.u)
             visualize(vis, integrator.t, state)
             u_modified!(integrator, false)
         end
@@ -194,7 +194,7 @@ function animate(vis::Visualizer, state::MechanismState, sol::ODESolution;
         end
         commands.terminate && (commands.terminate = false; break)
         x = sol(t)
-        set!(state, x)
+        copy!(state, x)
         normalize_configuration!(state)
         visualize(vis, t, state)
         framenum += 1

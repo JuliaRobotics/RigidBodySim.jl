@@ -30,7 +30,7 @@ import RigidBodyDynamics:
     StateCache, DynamicsResultCache,
     velocity, configuration,
     num_positions, num_velocities, num_additional_states,
-    set!, set_configuration!, normalize_configuration!,
+    set_configuration!, normalize_configuration!,
     configuration_derivative!, dynamics!, state_vector
 
 
