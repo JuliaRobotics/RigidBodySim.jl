@@ -15,11 +15,10 @@ git:
 
 ## uncomment the following lines to override the default test script
 script:
- - julia -e 'Pkg.clone(pwd()); Pkg.build("RigidBodySim"); Pkg.test("RigidBodySim"; coverage=true)'
+ - julia -e 'Pkg.clone(pwd()); Pkg.checkout("RigidBodyDynamics"); Pkg.build("RigidBodySim"); Pkg.test("RigidBodySim"; coverage=true)'
 after_success:
-  # push coverage results to Coveralls
-  - julia -e 'cd(Pkg.dir("RigidBodySim")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   # push coverage results to Codecov
   - julia -e 'cd(Pkg.dir("RigidBodySim")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  # build documentation
   - julia -e 'Pkg.add("Documenter")'
   - julia -e 'cd(Pkg.dir("RigidBodySim")); include(joinpath("docs", "make.jl"))'
