@@ -173,7 +173,7 @@ julia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));
 
 julia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));
 
-julia> animate(vis, state, sol; realtime_rate = 0.5);
+julia> RigidBodySim.animate(vis, state, sol; realtime_rate = 0.5);
 ```
 """
 function animate(vis::Visualizer, state::MechanismState, sol::ODESolution;

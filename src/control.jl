@@ -30,12 +30,12 @@ hold on a provided control function.
 `PeriodicController`s can be constructed using
 
 ```julia
-PeriodicController(τ, Δt, control; initialize = DiffEqBase.INITIALIZE_DEFAULT, save_positions = (false, false))
+PeriodicController(τ, Δt, control!; initialize = DiffEqBase.INITIALIZE_DEFAULT, save_positions = (false, false))
 ```
 
-where `control` is a controller satisfying the standard RigidBodySim controller signature
-(`control(τ, Δt, state)`), `Δt` is the simulation time interval between calls to the
-`control` function, and `τ` is used to call `control`.
+where `control!` is a controller satisfying the standard RigidBodySim controller signature
+(`control!(τ, Δt, state)`), `Δt` is the simulation time interval between calls to the
+`control!` function, and `τ` is used to call `control!`.
 The `initialize` and `save_positions` keyword arguments are documented in
 the [`DiscreteCallback`](http://docs.juliadiffeq.org/release-4.0/features/callback_functions.html#DiscreteCallback-1)
 section of the DifferentialEquations documentation.
@@ -45,7 +45,7 @@ RigidBodySim controller signature.
 
 A `DiffEqCallbacks.PeriodicCallback` can be created from a `PeriodicController`,
 and is used to stop ODE integration exactly every `Δt` seconds, so that the
-controller can be called. Typically, users will not have to explicitly create
+`control!` function can be called. Typically, users will not have to explicitly create
 this `PeriodicCallback`, as it is automatically created and
 added to the `ODEProblem` when the `PeriodicController` is passed into the
 RigidBodySim-provided `DiffEqBase.ODEProblem` constructor overload.
@@ -91,15 +91,15 @@ julia> controlcalls[]
 struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
     τ::Tau
     Δt::T
-    control::C
+    control!::C
     initialize::I
     save_positions::Tuple{Bool, Bool}
     docontrol::Base.RefValue{Bool}
 
-    function PeriodicController(τ::Tau, Δt::T, control::C;
+    function PeriodicController(τ::Tau, Δt::T, control!::C;
             initialize::I = DiffEqBase.INITIALIZE_DEFAULT,
             save_positions = (false, false)) where {Tau<:AbstractVector, T<:Number, C, I}
-        new{Tau, T, C, I}(τ, Δt, control, initialize, save_positions, Ref(true))
+        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(true))
     end
 end
 
@@ -123,7 +123,7 @@ controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
 
 function (controller::PeriodicController)(τ::AbstractVector, t, state)
     if controller.docontrol[]
-        controller.control(controller.τ, t, state)
+        controller.control!(controller.τ, t, state)
         controller.docontrol[] = false
     end
     copy!(τ, controller.τ)

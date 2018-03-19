@@ -48,11 +48,11 @@ struct Dynamics{M, JointCollection, C, P}
 end
 
 """
-Create a `Dynamics` object, representing the closed-loop dynamics of a `RigidBodyDynamics.Mechanism`.
+Create a `Dynamics` object, representing either the passive or closed-loop dynamics of a `RigidBodyDynamics.Mechanism`.
 
 The `control!` argument is a callable with the signature `control!(τ, t, state)`, where `τ` is the
 torque vector to be set in the body of `control!`, `t` is the current time, and `state` is a `MechanismState` object.
-By default, `control!` is [`zero_control!`](@ref).
+By default, `control!` is [`zero_control!`](@ref) (resulting in the passive dynamics).
 
 The `setparams!` keyword argument is a callable with the signature `setparams!(state, p)` where `state` is a
 `MechanismState` and `p` is a vector of parameters, as used in OrdinaryDiffEq.jl.
@@ -76,10 +76,10 @@ end
 """
 Can be used to create a callback associated with a given controller.
 """
-controlcallback(::Any) = nothing
+controlcallback(control!::Any) = nothing
 
 """
-Create a `DiffEqBase.ODEProblem` associated with the closed-loop dynamics of a `RigidBodyDynamics.Mechanism`.
+Create a `DiffEqBase.ODEProblem` associated with the dynamics of a `RigidBodyDynamics.Mechanism`.
 
 The initial state `x0` can be either a [`RigidBodyDynamics.MechanismState`]
 (http://JuliaRobotics.github.io/RigidBodyDynamics.jl/stable/mechanismstate.html#RigidBodyDynamics.MechanismState)),
