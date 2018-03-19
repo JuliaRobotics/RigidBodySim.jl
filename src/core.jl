@@ -24,6 +24,7 @@ import DiffEqBase:
     ODEProblem, DiscreteCallback, u_modified!, CallbackSet
 import DiffEqCallbacks:
     PeriodicCallback
+import DiffEqDiffTools
 import RigidBodyDynamics:
     Mechanism,
     MechanismState, DynamicsResult,
@@ -34,7 +35,7 @@ import RigidBodyDynamics:
     set_configuration!, normalize_configuration!,
     configuration_derivative!, dynamics!,
     ranges
-
+import ForwardDiff
 
 """
 A 'zero' controller, i.e. one that sets all control torques to zero at all times.
@@ -81,6 +82,10 @@ function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t::T
     copy!(ẋ, result)
     ẋ
 end
+
+# Disable ForwardDiff tag mechanism to work around https://github.com/JuliaDiff/ForwardDiff.jl/issues/267
+# The Tag type becomes too complicated due to the TypeSortedCollection type parameter, resulting in inference issues
+ForwardDiff.Tag(::DiffEqDiffTools.UJacobianWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
 
 """
 Can be used to create a callback associated with a given controller.

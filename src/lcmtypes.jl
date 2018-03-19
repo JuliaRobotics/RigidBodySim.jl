@@ -5,7 +5,6 @@ export
     UTimeT
 
 using LCMCore
-using StaticArrays
 
 mutable struct CommsT <: LCMType
     utime::Int64
