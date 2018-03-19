@@ -16,7 +16,7 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import RigidBodySim.Core: create_ode_problem
+import RigidBodySim.Core: controlcallback
 import DiffEqBase
 import DiffEqBase: ODEProblem, CallbackSet, u_modified!
 import DiffEqCallbacks: PeriodicCallback
@@ -123,16 +123,14 @@ function PeriodicCallback(controller::PeriodicController)
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
 end
 
+controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
+
 function (controller::PeriodicController)(τ::AbstractVector, t, state)
     if controller.docontrol[]
         controller.control(controller.τ, t, state)
         controller.docontrol[] = false
     end
-    τ[:] = controller.τ
-end
-
-function ODEProblem(state::MechanismState, tspan, controller::PeriodicController; callback = nothing)
-    create_ode_problem(state, tspan, controller, CallbackSet(PeriodicCallback(controller), callback))
+    copy!(τ, controller.τ)
 end
 
 end # module
