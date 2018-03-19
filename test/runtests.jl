@@ -37,6 +37,24 @@ function pause_message_sender(tpause::Number, pausecondition::Condition)
     DiscreteCallback(condition, action, save_positions=(false, false), initialize = initialize)
 end
 
+function dynamics_allocations(dynamics::Dynamics, state::MechanismState) # introduce function barrier
+    x = Vector(state)
+    ẋ = similar(x)
+    p = nothing
+    t = 3.
+    dynamics(ẋ, x, p, t)
+    allocs = @allocated dynamics(ẋ, x, p, t)
+end
+
+@testset "Dynamics" begin
+    srand(134)
+    mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
+    dynamics = Dynamics(mechanism)
+    state = MechanismState(mechanism)
+    rand!(state)
+    @test dynamics_allocations(dynamics, state) <= 80
+end
+
 @testset "compare to simulate" begin
     srand(1)
 

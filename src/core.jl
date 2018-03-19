@@ -27,11 +27,13 @@ import DiffEqCallbacks:
 import RigidBodyDynamics:
     Mechanism,
     MechanismState, DynamicsResult,
-    StateCache, DynamicsResultCache,
+    StateCache, DynamicsResultCache, SegmentedVectorCache,
+    JointID,
     velocity, configuration,
     num_positions, num_velocities, num_additional_states,
     set_configuration!, normalize_configuration!,
-    configuration_derivative!, dynamics!, state_vector
+    configuration_derivative!, dynamics!,
+    ranges
 
 
 """
@@ -41,8 +43,8 @@ zero_control!(τ::AbstractVector, t, state) = τ[:] = 0
 
 struct Dynamics{M, JointCollection, C, P}
     statecache::StateCache{M, JointCollection}
+    τcache::SegmentedVectorCache{JointID, Base.OneTo{JointID}}
     resultcache::DynamicsResultCache{M}
-    # FIXME: τcache
     control!::C
     setparams!::P
 end
@@ -58,19 +60,26 @@ The `setparams!` keyword argument is a callable with the signature `setparams!(s
 `MechanismState` and `p` is a vector of parameters, as used in OrdinaryDiffEq.jl.
 """
 function Dynamics(mechanism::Mechanism, control! = zero_control!; setparams! = (state, p) -> nothing)
-    Dynamics(StateCache(mechanism), DynamicsResultCache(mechanism), control!, setparams!)
+    vranges = let state = MechanismState(mechanism) # just to get velocity ranges; TODO: consider adding method that creates this from a Mechanism
+        ranges(velocity(state))
+    end
+    Dynamics(StateCache(mechanism), SegmentedVectorCache(vranges), DynamicsResultCache(mechanism), control!, setparams!)
 end
 
-function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t) where X
+Base.@pure cachevartype(::Type{<:MechanismState{<:Any, <:Any, C}}) where {C} = C
+
+function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t::T) where {X, T}
     state = dynamics.statecache[X]
-    result = dynamics.resultcache[X]
-    τ = similar(velocity(state)) # FIXME
+    C = cachevartype(typeof(state))
+    Tau = promote_type(X, C)
+    τ = dynamics.τcache[Tau]
+    result = dynamics.resultcache[Tau]
     copy!(state, x)
     dynamics.setparams!(state, p)
     dynamics.control!(τ, t, state)
     dynamics!(result, state, τ)
     copy!(ẋ, result)
-    nothing
+    ẋ
 end
 
 """
