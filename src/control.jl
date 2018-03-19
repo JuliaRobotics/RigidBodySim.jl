@@ -48,11 +48,7 @@ and is used to stop ODE integration exactly every `Δt` seconds, so that the
 controller can be called. Typically, users will not have to explicitly create
 this `PeriodicCallback`, as it is automatically created and
 added to the `ODEProblem` when the `PeriodicController` is passed into the
-following `DiffEqBase.ODEProblem` constructor overload:
-
-```
-ODEProblem(state, tspan, controller::PeriodicController; callback)
-```
+RigidBodySim-provided `DiffEqBase.ODEProblem` constructor overload.
 
 # Examples
 
@@ -75,7 +71,7 @@ julia> pdcontrol!(τ, t, state) = (controlcalls[] += 1; τ .= -20 .* velocity(st
 julia> τ = zeros(velocity(state)); Δt = 1 / 200
 0.005
 
-julia> problem = ODEProblem(state, (0., 5.), PeriodicController(τ, Δt, pdcontrol!));
+julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));
 
 julia> sol = solve(problem, Tsit5());
 

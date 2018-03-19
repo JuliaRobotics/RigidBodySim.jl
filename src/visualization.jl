@@ -165,7 +165,7 @@ julia> state = MechanismState(mechanism);
 
 julia> set_configuration!(state, [0.1; 0.2]);
 
-julia> problem = ODEProblem(state, (0., 2.));
+julia> problem = ODEProblem(Dynamics(mechanism), state, (0., 2.));
 
 julia> sol = solve(problem, Vern7());
 

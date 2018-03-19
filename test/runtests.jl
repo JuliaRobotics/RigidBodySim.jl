@@ -48,7 +48,7 @@ end
     x0 = Vector(state)
 
     final_time = 5.
-    problem = ODEProblem(state, (0., final_time))
+    problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
 
     copy!(state, x0)
@@ -69,7 +69,7 @@ end
 
         tfinal = 100.
         dt = 1e-4
-        problem = ODEProblem(state, (0., tfinal))
+        problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
 
         # Simulate for 3 seconds (wall time) and then send a termination command
         @async (sleep(3.); send_terminate_message())
@@ -88,7 +88,7 @@ end
         println("last(sol.t) after early termination 2: $(last(sol.t))")
 
         # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
-        problem = ODEProblem(state, (0., 1.))
+        problem = ODEProblem(Dynamics(mechanism), state, (0., 1.))
         pausetime = 0.5
         pausecondition = Condition()
         pauser = pause_message_sender(pausetime, pausecondition)
@@ -108,7 +108,7 @@ end
         @test havepaused[]
 
         # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
-        problem = ODEProblem(state, (0., tfinal))
+        problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
         @async (sleep(3.); send_pause_message())
         @async (sleep(4.); send_terminate_message())
         sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
@@ -128,7 +128,7 @@ end
     rand!(configuration(state))
     @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 
-    problem = ODEProblem(state, (0., 1e-3))
+    problem = ODEProblem(Dynamics(mechanism), state, (0., 1e-3))
     sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
 
     copy!(state, sol[end])
@@ -160,7 +160,7 @@ end
         state = MechanismState(mechanism)
 
         final_time = 5.
-        problem = ODEProblem(state, (0., final_time))
+        problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
         sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
 
         # regular playback
@@ -209,7 +209,7 @@ end
         τ[2] = cos(t)
     end; initialize = initialize)
     final_time = 25.3
-    problem = ODEProblem(state, (0., final_time), controller)
+    problem = ODEProblem(Dynamics(mechanism, controller), state, (0., final_time))
 
     # ensure that controller gets called at appropriate times:
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
