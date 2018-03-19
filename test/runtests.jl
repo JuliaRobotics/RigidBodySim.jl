@@ -9,6 +9,7 @@ using LCMCore
 import DiffEqCallbacks: DiscreteCallback
 import DiffEqBase: add_tstop!
 import RigidBodyTreeInspector: settransform!
+import OrdinaryDiffEq: Rodas4P
 
 using Base.Test
 
@@ -237,6 +238,21 @@ end
     empty!(controltimes)
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
+end
+
+@testset "Stiff integrator" begin
+    urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
+    mechanism = parse_urdf(Float64, urdf)
+    state = MechanismState(mechanism)
+    srand(1)
+    rand!(state)
+    x0 = Vector(state)
+    final_time = 1.
+    problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
+
+    sol_nonstiff = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol_stiff = solve(problem, Rodas4P(), abs_tol = 1e-10, dt = 0.05)
+    @test last(sol_nonstiff) ≈ last(sol_stiff) atol = 1e-2
 end
 
 # notebooks
