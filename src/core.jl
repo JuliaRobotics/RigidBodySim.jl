@@ -72,7 +72,7 @@ Base.@pure cachevartype(::Type{<:MechanismState{<:Any, <:Any, C}}) where {C} = C
 function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t::T) where {X, T}
     state = dynamics.statecache[X]
     C = cachevartype(typeof(state))
-    Tau = promote_type(X, C)
+    Tau = promote_type(T, C)
     τ = dynamics.τcache[Tau]
     result = dynamics.resultcache[Tau]
     copy!(state, x)
@@ -85,7 +85,11 @@ end
 
 # Disable ForwardDiff tag mechanism to work around https://github.com/JuliaDiff/ForwardDiff.jl/issues/267
 # The Tag type becomes too complicated due to the TypeSortedCollection type parameter, resulting in inference issues
+ForwardDiff.Tag(::DiffEqDiffTools.TimeGradientWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
 ForwardDiff.Tag(::DiffEqDiffTools.UJacobianWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
+ForwardDiff.Tag(::DiffEqDiffTools.TimeDerivativeWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
+ForwardDiff.Tag(::DiffEqDiffTools.UDerivativeWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
+ForwardDiff.Tag(::DiffEqDiffTools.ParamJacobianWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
 
 """
 Can be used to create a callback associated with a given controller.
