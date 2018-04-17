@@ -17,7 +17,14 @@ using DocStringExtensions
 $(TYPEDEF)
 
 Stores visualizer-independent commands used to control the simulation.
+"""
+mutable struct SimulationCommands
+    terminate::Bool
+    pause::Bool
+    SimulationCommands() = (ret = new(); initialize!(ret); ret)
+end
 
+"""
 A module providing a specific visualizer instance, say `MyVisualizer`, should
 provide a `SimulationCommands` constructor method with the signature
 
@@ -25,14 +32,11 @@ provide a `SimulationCommands` constructor method with the signature
 SimulationCommands(vis::MyVisualizer)
 ```
 
-which returns a `SimulationCommands` object and performs any visualizer-dependent
-setup.
+which returns a `SimulationCommands` object (to be constructed using
+`SimulationCommands()` in addition to performing any visualizer-dependent setup.
 """
-mutable struct SimulationCommands
-    terminate::Bool
-    pause::Bool
-    SimulationCommands() = (ret = new(); initialize!(ret); ret)
-end
+function SimulationCommands end
+
 
 function initialize!(commands::SimulationCommands)
     commands.terminate = false
@@ -125,10 +129,14 @@ function CallbackSet(vis, state::MechanismState; max_fps = 60.)
 end
 
 """
-Play back a visualization of a `DiffEqBase.ODESolution` obtained from a RigidBodySim.jl simulation.
+Play back a visualization of a RigidBodySim.jl simulation.
 
-`vis` visualizer satisfying the RigidBodySim visualizer interface. `state` is a [`RigidBodyDynamics.MechanismState`](http://JuliaRobotics.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState),
+Positional arguments:
+
+* `vis` is a visualizer satisfying the RigidBodySim [visualizer interface](@ref vis_interface).
+* `state` is a [`RigidBodyDynamics.MechanismState`](http://JuliaRobotics.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState),
 representing the state of the mechanism that was simulated, and will be modified during the visualization.
+* `sol` is a `DiffEqBase.ODESolution` obtained from a RigidBodySim.jl simulation.
 
 `animate` accepts the following keyword arguments:
 
@@ -142,25 +150,20 @@ representing the state of the mechanism that was simulated, and will be modified
 Visualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:
 
 ```jldoctest
-julia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq, RigidBodyTreeInspector
+using RigidBodySim, RigidBodyDynamics, MechanismGeometries
+import RigidBodyTreeInspector: Visualizer
+urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
+mechanism = parse_urdf(Float64, urdf)
+state = MechanismState(mechanism)
+set_configuration!(state, [0.1; 0.2])
+problem = ODEProblem(Dynamics(mechanism), state, (0., 2.))
+sol = solve(problem, Vern7())
+vis = Visualizer(mechanism, visual_elements(mechanism, URDFVisuals(urdf)))
+window(vis)
+animate(vis, state, sol; realtime_rate = 0.5)
 
-julia> urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf");
+# output
 
-julia> mechanism = parse_urdf(Float64, urdf);
-
-julia> state = MechanismState(mechanism);
-
-julia> set_configuration!(state, [0.1; 0.2]);
-
-julia> problem = ODEProblem(Dynamics(mechanism), state, (0., 2.));
-
-julia> sol = solve(problem, Vern7());
-
-julia> any_open_visualizer_windows() || (new_visualizer_window(); sleep(1));
-
-julia> vis = Visualizer(mechanism, parse_urdf(urdf, mechanism));
-
-julia> RigidBodySim.animate(vis, state, sol; realtime_rate = 0.5);
 ```
 """
 function animate(vis, state::MechanismState, sol::ODESolution;

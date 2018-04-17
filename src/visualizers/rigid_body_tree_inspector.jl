@@ -1,5 +1,6 @@
 module RigidBodyTreeInspectorInterface
 
+using DocStringExtensions
 import RigidBodySim.Visualization.VisualizerInterface
 import DrakeVisualizer
 import JSON
@@ -44,6 +45,8 @@ function VisualizerInterface.visualize(vis::DrakeVisualizer.Visualizer, t::Numbe
 end
 
 """
+$(SIGNATURES)
+
 Open a new [director](https://github.com/RobotLocomotion/director) visualizer window.
 
 The director instance will be started with a script that handles communication between RigidBodySim.jl
