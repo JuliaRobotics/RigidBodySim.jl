@@ -1,11 +1,12 @@
 using Compat, RigidBodySim, Documenter
 
 makedocs(
-    doctest = false,
+    doctest = true,
     modules = [RigidBodySim],
     checkdocs = :none, # because of the reexported functionality
     format = :html,
     sitename ="RigidBodySim.jl",
+    linkcheck = true,
     authors = "Twan Koolen and contributors.",
     pages = [
         "Home" => "index.md",

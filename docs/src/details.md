@@ -2,10 +2,6 @@
 
 ## Index
 
-```@index
-Pages   = ["details.md"]
-Order   = [:type, :function, :macro]
-```
 
 ## ODE problem creation
 
@@ -27,11 +23,40 @@ PeriodicController
 
 ## Visualization
 
+### User interface
+
 ```@docs
 DiffEqBase.CallbackSet(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState)
-any_open_visualizer_windows
-new_visualizer_window
-animate(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState, ::DiffEqBase.ODESolution)
+RigidBodySim.Visualization.visualize
+RigidBodySim.Visualization.window
+RigidBodySim.Visualization.animate
+```
+
+### Visualizers
+
+#### RigidBodyTreeInspector
+
+RigidBodySim provides an interface for the [RigidBodyTreeInspector.jl](https://github.com/rdeits/RigidBodyTreeInspector.jl)
+visualizer, built on top of [Director](https://github.com/RobotLocomotion/director).
+
+The RigidBodyTreeInspector visualizer handle is a `DrakeVisualizer.Visualizer`. The easiest way to create a `Visualizer` for a robot is
+from a URDF, which can be parsed by RigidBodyTreeInspector's `parse_urdf` function.
+
+```@docs
+window(vis::DrakeVisualizer.Visualizer)
+```
+
+### [Visualizer interface](@id vis_interface)
+
+RigidBodySim visualizers must implement the following interface:
+
+* [`RigidBodySim.Visualization.VisualizerInterface.visualize`](@ref)
+* [`RigidBodySim.Visualization.VisualizerInterface.window`](@ref)
+
+In addition, visualizers should also implement the following:
+
+```@docs
+RigidBodySim.Visualization.VisualizerInterface.SimulationCommands
 ```
 
 ## Utilities

@@ -3,13 +3,13 @@ module RigidBodySimTest
 using RigidBodyDynamics
 using RigidBodySim
 
-using JSON
-using LCMCore
-
+import JSON
+import LCMCore: LCM, publish
 import DiffEqCallbacks: DiscreteCallback
 import DiffEqBase: add_tstop!
-import RigidBodyTreeInspector: settransform!
 import OrdinaryDiffEq: Rodas4P
+import RigidBodyTreeInspector: Visualizer
+import RigidBodySim.Visualization.RigidBodyTreeInspectorInterface
 
 using Base.Test
 
@@ -20,7 +20,7 @@ function send_control_message(lcm::LCM, contents::Associative)
     version_minor = 1
     data = convert(Vector{UInt8}, JSON.json(contents))
     msg = RigidBodySim.LCMTypes.CommsT(utime, format, version_major, version_minor, data)
-    publish(lcm, RigidBodySim.Visualization.LCM_CONTROL_CHANNEL, msg)
+    publish(lcm, RigidBodyTreeInspectorInterface.LCM_CONTROL_CHANNEL, msg)
 end
 
 send_pause_message(lcm::LCM = LCM()) = send_control_message(lcm, Dict("pause" => nothing))
@@ -77,66 +77,62 @@ end
 end
 
 @testset "visualizer callbacks" begin
-    visualizer_process = new_visualizer_window(); sleep(1)
-    try
-        mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
-        state = MechanismState(mechanism)
+    mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
+    state = MechanismState(mechanism)
 
-        vis = Visualizer(mechanism; show_inertias = true)
-        settransform!(vis, state)
-        vis_callbacks = CallbackSet(vis, state)
+    vis = Visualizer(mechanism; show_inertias = true)
+    window(vis)
+    visualize(vis, 0.0, state)
 
-        tfinal = 100.
-        dt = 1e-4
-        problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
+    tfinal = 100.
+    dt = 1e-4
+    problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
 
-        # Simulate for 3 seconds (wall time) and then send a termination command
-        @async (sleep(3.); send_terminate_message())
-        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-        @test sol.t[end] > 2 * dt
-        @test sol.t[end] < tfinal
-        println("last(sol.t) after early termination 1: $(last(sol.t))")
+    # Simulate for 3 seconds (wall time) and then send a termination command
+    vis_callbacks = CallbackSet(vis, state)
+    @async (sleep(3.); send_terminate_message())
+    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+    @test sol.t[end] > 2 * dt
+    @test sol.t[end] < tfinal
+    println("last(sol.t) after early termination 1: $(last(sol.t))")
 
-        # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
-        send_terminate_message()
-        sleep(0.1)
-        @async (sleep(3.); send_terminate_message())
-        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-        @test sol.t[end] > 2 * dt
-        @test sol.t[end] < tfinal
-        println("last(sol.t) after early termination 2: $(last(sol.t))")
+    # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
+    send_terminate_message()
+    sleep(0.1)
+    @async (sleep(3.); send_terminate_message())
+    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+    @test sol.t[end] > 2 * dt
+    @test sol.t[end] < tfinal
+    println("last(sol.t) after early termination 2: $(last(sol.t))")
 
-        # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
-        problem = ODEProblem(Dynamics(mechanism), state, (0., 1.))
-        pausetime = 0.5
-        pausecondition = Condition()
-        pauser = pause_message_sender(pausetime, pausecondition)
-        integrator = init(problem, RK4(), adaptive = false, dt = dt, callback = CallbackSet(vis_callbacks, pauser))
-        havepaused = Ref(false)
-        @async begin
-            wait(pausecondition)
-            sleep(0.5) # wait for message to reach command handler callback
-            integrator_time = integrator.t
-            @test integrator_time < pausetime + 0.1 # it takes a while for the pause message to reach the command handler callback
-            sleep(2.)
-            @test integrator.t == integrator_time # make sure simulation remains paused
-            havepaused[] = true
-            send_pause_message() # unpause
-        end
-        solve!(integrator)
-        @test havepaused[]
-
-        # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
-        problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
-        @async (sleep(3.); send_pause_message())
-        @async (sleep(4.); send_terminate_message())
-        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-        @test sol.t[end] > 2 * dt
-        @test sol.t[end] < tfinal
-        println("last(sol.t) after early termination 3: $(last(sol.t))")
-    finally
-        kill(visualizer_process)
+    # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
+    problem = ODEProblem(Dynamics(mechanism), state, (0., 1.))
+    pausetime = 0.5
+    pausecondition = Condition()
+    pauser = pause_message_sender(pausetime, pausecondition)
+    integrator = init(problem, RK4(), adaptive = false, dt = dt, callback = CallbackSet(vis_callbacks, pauser))
+    havepaused = Ref(false)
+    @async begin
+        wait(pausecondition)
+        sleep(0.5) # wait for message to reach command handler callback
+        integrator_time = integrator.t
+        @test integrator_time < pausetime + 0.1 # it takes a while for the pause message to reach the command handler callback
+        sleep(2.)
+        @test integrator.t == integrator_time # make sure simulation remains paused
+        havepaused[] = true
+        send_pause_message() # unpause
     end
+    solve!(integrator)
+    @test havepaused[]
+
+    # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
+    problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
+    @async (sleep(3.); send_pause_message())
+    @async (sleep(4.); send_terminate_message())
+    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+    @test sol.t[end] > 2 * dt
+    @test sol.t[end] < tfinal
+    println("last(sol.t) after early termination 3: $(last(sol.t))")
 end
 
 @testset "renormalization callback" begin
@@ -173,46 +169,43 @@ end
 end
 
 @testset "ODESolution animation" begin
-    visualizer_process = new_visualizer_window(); sleep(1)
-    try
-        mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
-        state = MechanismState(mechanism)
+    mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
+    state = MechanismState(mechanism)
 
-        final_time = 5.
-        problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
-        sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    vis = Visualizer(mechanism; show_inertias = true)
+    window(vis)
 
-        # regular playback
-        realtime_rate = 2.
-        vis = Visualizer(mechanism; show_inertias = true)
-        animate(vis, state, sol, realtime_rate = 1000.)
-        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate, max_fps = 60.)
-        @test elapsed ≈ final_time / realtime_rate atol = 0.1
+    final_time = 5.
+    problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
+    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
 
-        # premature termination
-        termination_time = 1.5
-        @async (sleep(termination_time); send_terminate_message())
-        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
-        @test elapsed ≈ termination_time atol = 0.1
+    # regular playback
+    realtime_rate = 2.
+    animate(vis, state, sol, realtime_rate = 1000.)
+    elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate, max_fps = 60.)
+    @test elapsed ≈ final_time / realtime_rate atol = 0.1
 
-        # pause and unpause
-        pause_time = 1.0
-        unpause_time = 3.5
-        @async (sleep(pause_time); send_pause_message())
-        @async (sleep(unpause_time); send_pause_message())
-        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
-        @show elapsed
-        @test elapsed ≈ final_time / realtime_rate + (unpause_time - pause_time) atol = 0.2 # higher atol because of pause poll int
+    # premature termination
+    termination_time = 1.5
+    @async (sleep(termination_time); send_terminate_message())
+    elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+    @test elapsed ≈ termination_time atol = 0.1
 
-        # pause and terminate
-        @async (sleep(pause_time); send_pause_message())
-        @async (sleep(termination_time); send_terminate_message())
-        elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
-        @show elapsed
-        @test elapsed ≈ termination_time atol = 0.2 # higher atol because of pause poll int
-    finally
-        kill(visualizer_process)
-    end
+    # pause and unpause
+    pause_time = 1.0
+    unpause_time = 3.5
+    @async (sleep(pause_time); send_pause_message())
+    @async (sleep(unpause_time); send_pause_message())
+    elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+    @show elapsed
+    @test elapsed ≈ final_time / realtime_rate + (unpause_time - pause_time) atol = 0.2 # higher atol because of pause poll int
+
+    # pause and terminate
+    @async (sleep(pause_time); send_pause_message())
+    @async (sleep(termination_time); send_terminate_message())
+    elapsed = @elapsed animate(vis, state, sol, realtime_rate = realtime_rate)
+    @show elapsed
+    @test elapsed ≈ termination_time atol = 0.2 # higher atol because of pause poll int
 end
 
 @testset "PeriodicController" begin
