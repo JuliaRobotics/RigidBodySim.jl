@@ -25,13 +25,19 @@ controlcallback
 PeriodicController
 ```
 
-## Visualization
+## Visualization interface
 
 ```@docs
 DiffEqBase.CallbackSet(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState)
-any_open_visualizer_windows
-new_visualizer_window
-animate(::DrakeVisualizer.Visualizer, ::RigidBodyDynamics.MechanismState, ::DiffEqBase.ODESolution)
+window
+animate
+visualize
+```
+
+## Visualizers
+
+TODO
+```@docs
 ```
 
 ## Utilities

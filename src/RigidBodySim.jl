@@ -26,11 +26,6 @@ export
     RK4, # from OrdinaryDiffEq
     CallbackSet # from DiffEqCallbacks
 
-# select DrakeVisualizer exports
-export
-    Visualizer,
-    settransform!
-
 # Core
 export
     Dynamics,
@@ -45,8 +40,8 @@ export
 
 # Visualization
 export
-    any_open_visualizer_windows,
-    new_visualizer_window,
-    animate
+    animate,
+    window,
+    visualize
 
 end # module
