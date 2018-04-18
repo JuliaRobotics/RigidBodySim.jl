@@ -249,11 +249,27 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "details.html#MeshCatMechanisms-1",
+    "page": "Details",
+    "title": "MeshCatMechanisms",
+    "category": "section",
+    "text": "RigidBodySim has support for the MeshCatMechanisms.jl MechanismVisualizer. Support is currently non-interactive, i.e., the simulation cannot be paused or terminated through the visualizer."
+},
+
+{
     "location": "details.html#RigidBodySim.Visualization.VisualizerInterface.SimulationCommands",
     "page": "Details",
     "title": "RigidBodySim.Visualization.VisualizerInterface.SimulationCommands",
     "category": "type",
-    "text": "A module providing a specific visualizer instance, say MyVisualizer, should provide a SimulationCommands constructor method with the signature\n\nSimulationCommands(vis::MyVisualizer)\n\nwhich returns a SimulationCommands object (to be constructed using SimulationCommands() in addition to performing any visualizer-dependent setup.\n\n\n\n"
+    "text": "type SimulationCommands\n\nStores visualizer-independent commands used to control the simulation.\n\nA module providing a specific visualizer instance, say MyVisualizer, should provide a SimulationCommands constructor method with the signature\n\nSimulationCommands(vis::MyVisualizer)\n\nwhich returns a SimulationCommands object (to be constructed using SimulationCommands() in addition to performing any visualizer-dependent setup.\n\n\n\n"
+},
+
+{
+    "location": "details.html#RigidBodySim.Visualization.VisualizerInterface.isinteractive",
+    "page": "Details",
+    "title": "RigidBodySim.Visualization.VisualizerInterface.isinteractive",
+    "category": "function",
+    "text": "isinteractive(vis)\n\nReturn whether or not visualizer vis supports user interaction (e.g. sending pause and terminate commands).\n\n\n\n"
 },
 
 {
@@ -261,7 +277,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Details",
     "title": "Visualizer interface",
     "category": "section",
-    "text": "RigidBodySim visualizers must implement the following interface:RigidBodySim.Visualization.VisualizerInterface.visualize\nRigidBodySim.Visualization.VisualizerInterface.windowIn addition, visualizers should also implement the following:RigidBodySim.Visualization.VisualizerInterface.SimulationCommands"
+    "text": "RigidBodySim visualizers must implement the following interface:RigidBodySim.Visualization.VisualizerInterface.visualize\nRigidBodySim.Visualization.VisualizerInterface.windowIn addition, visualizers should also implement the following:RigidBodySim.Visualization.VisualizerInterface.SimulationCommands\nRigidBodySim.Visualization.VisualizerInterface.isinteractive"
 },
 
 {
