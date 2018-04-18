@@ -17,14 +17,7 @@ using DocStringExtensions
 $(TYPEDEF)
 
 Stores visualizer-independent commands used to control the simulation.
-"""
-mutable struct SimulationCommands
-    terminate::Bool
-    pause::Bool
-    SimulationCommands() = (ret = new(); initialize!(ret); ret)
-end
 
-"""
 A module providing a specific visualizer instance, say `MyVisualizer`, should
 provide a `SimulationCommands` constructor method with the signature
 
@@ -35,8 +28,11 @@ SimulationCommands(vis::MyVisualizer)
 which returns a `SimulationCommands` object (to be constructed using
 `SimulationCommands()` in addition to performing any visualizer-dependent setup.
 """
-function SimulationCommands end
-
+mutable struct SimulationCommands
+    terminate::Bool
+    pause::Bool
+    SimulationCommands() = (ret = new(); initialize!(ret); ret)
+end
 
 function initialize!(commands::SimulationCommands)
     commands.terminate = false
@@ -59,6 +55,14 @@ arguments (`kwargs`) may be passed in.
 """
 function window end
 
+"""
+    isinteractive(vis)
+
+Return whether or not visualizer `vis` supports user interaction (e.g. sending
+pause and terminate commands).
+"""
+function isinteractive end
+
 end # module
 
 using DocStringExtensions
@@ -74,7 +78,7 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import RigidBodySim.Visualization.VisualizerInterface: window, visualize, SimulationCommands
+import RigidBodySim.Visualization.VisualizerInterface: window, visualize, SimulationCommands, isinteractive
 import DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 import DataStructures
 import RigidBodyDynamics: MechanismState, set!, normalize_configuration!
@@ -195,5 +199,6 @@ end
 
 # Visualizer interfaces
 include("visualizers/rigid_body_tree_inspector.jl")
+include("visualizers/meshcat.jl")
 
 end # module

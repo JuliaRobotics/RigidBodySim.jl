@@ -46,6 +46,10 @@ from a URDF, which can be parsed by RigidBodyTreeInspector's `parse_urdf` functi
 window(vis::DrakeVisualizer.Visualizer)
 ```
 
+#### MeshCatMechanisms
+
+RigidBodySim has support for the [MeshCatMechanisms.jl](https://github.com/JuliaRobotics/MeshCatMechanisms.jl) `MechanismVisualizer`. Support is currently non-interactive, i.e., the simulation cannot be paused or terminated through the visualizer.
+
 ### [Visualizer interface](@id vis_interface)
 
 RigidBodySim visualizers must implement the following interface:
@@ -57,6 +61,7 @@ In addition, visualizers should also implement the following:
 
 ```@docs
 RigidBodySim.Visualization.VisualizerInterface.SimulationCommands
+RigidBodySim.Visualization.VisualizerInterface.isinteractive
 ```
 
 ## Utilities

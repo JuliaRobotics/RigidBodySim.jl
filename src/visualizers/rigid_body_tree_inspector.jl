@@ -64,4 +64,6 @@ function VisualizerInterface.window(vis::DrakeVisualizer.Visualizer; reuse = tru
     nothing
 end
 
+VisualizerInterface.isinteractive(::DrakeVisualizer.Visualizer) = true
+
 end # module

@@ -1,5 +1,6 @@
 module RigidBodySimTest
 
+using Compat
 using RigidBodyDynamics
 using RigidBodySim
 
@@ -8,10 +9,13 @@ import LCMCore: LCM, publish
 import DiffEqCallbacks: DiscreteCallback
 import DiffEqBase: add_tstop!
 import OrdinaryDiffEq: Rodas4P
-import RigidBodyTreeInspector: Visualizer
+import MechanismGeometries
+import RigidBodyTreeInspector
+import MeshCatMechanisms
+import MeshCat
 import RigidBodySim.Visualization.RigidBodyTreeInspectorInterface
 
-using Base.Test
+using Compat.Test
 
 function send_control_message(lcm::LCM, contents::Associative)
     utime = round(Int, time() * 1e-3)
@@ -76,63 +80,84 @@ end
     @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
 end
 
+function test_visualizer(mechanism, state, vis)
+    if !haskey(ENV, "CI")
+        window(vis)
+    end
+    visualize(vis, 0.0, state)
+
+    dt = 1e-4
+    tfinal = 0.5
+    problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
+    vis_callbacks = CallbackSet(vis, state)
+
+    # Simulate without interaction
+    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+    @test sol.t[end] == tfinal
+
+    if RigidBodySim.Visualization.isinteractive(vis)
+        tfinal = 100.
+        problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
+
+        # Simulate for 3 seconds (wall time) and then send a termination command
+        @async (sleep(3.); send_terminate_message())
+        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+        @test sol.t[end] > 2 * dt
+        @test sol.t[end] < tfinal
+        println("last(sol.t) after early termination 1: $(last(sol.t))")
+
+        # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
+        send_terminate_message()
+        sleep(0.1)
+        @async (sleep(3.); send_terminate_message())
+        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+        @test sol.t[end] > 2 * dt
+        @test sol.t[end] < tfinal
+        println("last(sol.t) after early termination 2: $(last(sol.t))")
+
+        # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
+        problem = ODEProblem(Dynamics(mechanism), state, (0., 1.))
+        pausetime = 0.5
+        pausecondition = Condition()
+        pauser = pause_message_sender(pausetime, pausecondition)
+        integrator = init(problem, RK4(), adaptive = false, dt = dt, callback = CallbackSet(vis_callbacks, pauser))
+        havepaused = Ref(false)
+        @async begin
+            wait(pausecondition)
+            sleep(0.5) # wait for message to reach command handler callback
+            integrator_time = integrator.t
+            @test integrator_time < pausetime + 0.1 # it takes a while for the pause message to reach the command handler callback
+            sleep(2.)
+            @test integrator.t == integrator_time # make sure simulation remains paused
+            havepaused[] = true
+            send_pause_message() # unpause
+        end
+        solve!(integrator)
+        @test havepaused[]
+
+        # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
+        problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
+        @async (sleep(3.); send_pause_message())
+        @async (sleep(4.); send_terminate_message())
+        sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
+        @test sol.t[end] > 2 * dt
+        @test sol.t[end] < tfinal
+        println("last(sol.t) after early termination 3: $(last(sol.t))")
+    end
+end
+
 @testset "visualizer callbacks" begin
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     state = MechanismState(mechanism)
 
-    vis = Visualizer(mechanism; show_inertias = true)
-    window(vis)
-    visualize(vis, 0.0, state)
+    visualizers = [
+        MeshCatMechanisms.MechanismVisualizer(mechanism, MeshCatMechanisms.Skeleton(randomize_colors = true, inertias = false), MeshCat.Visualizer()),
+        RigidBodyTreeInspector.Visualizer(mechanism; show_inertias = true)
+    ]
 
-    tfinal = 100.
-    dt = 1e-4
-    problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
-
-    # Simulate for 3 seconds (wall time) and then send a termination command
-    vis_callbacks = CallbackSet(vis, state)
-    @async (sleep(3.); send_terminate_message())
-    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-    @test sol.t[end] > 2 * dt
-    @test sol.t[end] < tfinal
-    println("last(sol.t) after early termination 1: $(last(sol.t))")
-
-    # Rinse and repeat with the same ODEProblem (make sure that we don't terminate straight away)
-    send_terminate_message()
-    sleep(0.1)
-    @async (sleep(3.); send_terminate_message())
-    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-    @test sol.t[end] > 2 * dt
-    @test sol.t[end] < tfinal
-    println("last(sol.t) after early termination 2: $(last(sol.t))")
-
-    # Pause and unpause a short simulation, make sure that the simulation takes longer than without pausing
-    problem = ODEProblem(Dynamics(mechanism), state, (0., 1.))
-    pausetime = 0.5
-    pausecondition = Condition()
-    pauser = pause_message_sender(pausetime, pausecondition)
-    integrator = init(problem, RK4(), adaptive = false, dt = dt, callback = CallbackSet(vis_callbacks, pauser))
-    havepaused = Ref(false)
-    @async begin
-        wait(pausecondition)
-        sleep(0.5) # wait for message to reach command handler callback
-        integrator_time = integrator.t
-        @test integrator_time < pausetime + 0.1 # it takes a while for the pause message to reach the command handler callback
-        sleep(2.)
-        @test integrator.t == integrator_time # make sure simulation remains paused
-        havepaused[] = true
-        send_pause_message() # unpause
+    for vis in visualizers
+        test_visualizer(mechanism, state, vis)
     end
-    solve!(integrator)
-    @test havepaused[]
-
-    # Simulate for 3 seconds wall time, then pause, and then terminate a second later to make sure terminating works while paused
-    problem = ODEProblem(Dynamics(mechanism), state, (0., tfinal))
-    @async (sleep(3.); send_pause_message())
-    @async (sleep(4.); send_terminate_message())
-    sol = solve(problem, RK4(), adaptive = false, dt = dt, callback = vis_callbacks)
-    @test sol.t[end] > 2 * dt
-    @test sol.t[end] < tfinal
-    println("last(sol.t) after early termination 3: $(last(sol.t))")
 end
 
 @testset "renormalization callback" begin
@@ -172,7 +197,7 @@ end
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     state = MechanismState(mechanism)
 
-    vis = Visualizer(mechanism; show_inertias = true)
+    vis = RigidBodyTreeInspector.Visualizer(mechanism; show_inertias = true)
     window(vis)
 
     final_time = 5.
