@@ -16,12 +16,12 @@ addons:
   apt:
     packages:
       - libzmq3
-script:
- - julia -e 'Pkg.clone(pwd()); Pkg.checkout("RigidBodyDynamics"); Pkg.checkout("RigidBodyTreeInspector"); Pkg.build("RigidBodySim")'
- - julia -e 'using RigidBodyDynamics' # precompile in steps so as to not trigger travis timeouts
- - julia -e 'using RigidBodyTreeInspector' # precompile in steps so as to not trigger travis timeouts
- - julia -e 'using MeshCatMechanisms' # precompile in steps so as to not trigger travis timeouts
- - julia -e 'Pkg.test("RigidBodySim"; coverage=true)'
+# script:
+#  - julia -e 'Pkg.clone(pwd()); Pkg.checkout("RigidBodyDynamics"); Pkg.checkout("RigidBodyTreeInspector"); Pkg.build("RigidBodySim")'
+#  - julia -e 'using RigidBodyDynamics' # precompile in steps so as to not trigger travis timeouts
+#  - julia -e 'using RigidBodyTreeInspector' # precompile in steps so as to not trigger travis timeouts
+#  - julia -e 'using MeshCatMechanisms' # precompile in steps so as to not trigger travis timeouts
+#  - julia -e 'Pkg.test("RigidBodySim"; coverage=true)'
 after_success:
   # push coverage results to Codecov
   - julia -e 'cd(Pkg.dir("RigidBodySim")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
