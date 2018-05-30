@@ -241,11 +241,16 @@ end
     initialize = (c, u, t, integrator) -> empty!(controltimes)
     τ = similar(velocity(state))
     Δt = 0.25
-    controller = PeriodicController(τ, Δt, function (τ, t, state)
-        push!(controltimes, t)
-        τ[1] = sin(t)
-        τ[2] = cos(t)
-    end; initialize = initialize)
+
+    make_controller = function ()
+        PeriodicController(τ, Δt, function (τ, t, state)
+            push!(controltimes, t)
+            τ[1] = sin(t)
+            τ[2] = cos(t)
+        end; initialize = initialize)
+    end
+
+    controller = make_controller()
     final_time = 25.3
     problem = ODEProblem(Dynamics(mechanism, controller), state, (0., final_time))
 
@@ -257,6 +262,20 @@ end
     empty!(controltimes)
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
+
+    # issue #60
+    empty!(controltimes)
+    problem60 = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time))
+    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    controller = controller = make_controller()
+    problem60 = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time))
+    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    problem60_fixed = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time),
+        callback = PeriodicCallback(controller))
+    sol60 = solve(problem60_fixed, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
+    @test sol60.t == sol.t
+    @test sol60.u == sol.u
 end
 
 @testset "Stiff integrator" begin
