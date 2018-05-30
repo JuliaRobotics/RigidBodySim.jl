@@ -3,6 +3,7 @@ __precompile__()
 module RigidBodySim
 
 import DiffEqBase: ODEProblem, init, solve!, solve, CallbackSet
+import DiffEqCallbacks: PeriodicCallback
 import OrdinaryDiffEq: Tsit5, Vern7, RK4
 import DrakeVisualizer: Visualizer, settransform!
 
@@ -24,7 +25,8 @@ export
     Tsit5, # from OrdinaryDiffEq
     Vern7, # from OrdinaryDiffEq
     RK4, # from OrdinaryDiffEq
-    CallbackSet # from DiffEqCallbacks
+    CallbackSet, # from DiffEqBase
+    PeriodicCallback # from DiffEqCallbacks
 
 # Core
 export

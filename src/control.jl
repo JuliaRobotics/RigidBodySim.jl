@@ -95,11 +95,12 @@ struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
     initialize::I
     save_positions::Tuple{Bool, Bool}
     docontrol::Base.RefValue{Bool}
+    last_control_time::Base.RefValue{T} # only used for checking that PeriodicCallback is correctly set up
 
     function PeriodicController(τ::Tau, Δt::T, control!::C;
             initialize::I = DiffEqBase.INITIALIZE_DEFAULT,
             save_positions = (false, false)) where {Tau<:AbstractVector, T<:Number, C, I}
-        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(true))
+        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(true), Ref(T(NaN)))
     end
 end
 
@@ -107,6 +108,7 @@ function PeriodicCallback(controller::PeriodicController)
     periodic_initialize = let controller = controller
         function (c, u, t, integrator)
             controller.docontrol[] = true
+            controller.last_control_time[] = NaN
             controller.initialize(c, u, t, integrator)
         end
     end
@@ -121,12 +123,36 @@ end
 
 controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
 
+struct PeriodicControlFailure <: Exception
+    Δt
+    t
+    last_control_time
+ end
+
+function Base.showerror(io::IO, e::PeriodicControlFailure)
+    print(io,
+        """
+        Output of PeriodicController with Δt = $(e.Δt) was last updated at $(e.last_control_time), but current time is $(e.t).
+        Please ensure that an associated `PeriodicCallback` was passed into the `ODEProblem` constructor.
+        This is done automatically if the `ODEProblem` was created using a `Dynamics` object with the `PeriodicController` as the `control!` field,
+        but if a `PeriodicController` is called from some other control function, the callback needs to be created manually using
+        `PeriodicCallback(periodiccontroller)` and passed into the `ODEProblem` constructor as the `callback` keyword argument
+        (or use `CallbackSet` to combine the `PeriodicCallback` with any other callbacks you may have).
+        """)
+end
+
 function (controller::PeriodicController)(τ::AbstractVector, t, state)
     if controller.docontrol[]
         controller.control!(controller.τ, t, state)
         controller.docontrol[] = false
+        controller.last_control_time[] = t
     end
     copy!(τ, controller.τ)
+    time_since_last_control = t - controller.last_control_time[]
+    if time_since_last_control > controller.Δt || time_since_last_control < zero(time_since_last_control)
+        throw(PeriodicControlFailure(controller.Δt, t, controller.last_control_time[]))
+    end
+    τ
 end
 
 end # module
