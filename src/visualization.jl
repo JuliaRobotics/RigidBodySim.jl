@@ -81,7 +81,7 @@ using DocStringExtensions
 import RigidBodySim.Visualization.VisualizerInterface: window, visualize, SimulationCommands, isinteractive
 import DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 import DataStructures
-import RigidBodyDynamics: MechanismState, set!, normalize_configuration!
+import RigidBodyDynamics: MechanismState, normalize_configuration!
 import LoopThrottle: @throttle
 
 const DEFAULT_PAUSE_POLLINT = 0.05
