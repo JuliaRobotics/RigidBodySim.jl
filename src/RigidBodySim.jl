@@ -5,11 +5,9 @@ module RigidBodySim
 import DiffEqBase: ODEProblem, init, solve!, solve, CallbackSet
 import DiffEqCallbacks: PeriodicCallback
 import OrdinaryDiffEq: Tsit5, Vern7, RK4
-import DrakeVisualizer: Visualizer, settransform!
 
 include("core.jl")
 include("control.jl")
-include("lcmtypes.jl")
 include("visualization.jl")
 
 using .Core
@@ -44,6 +42,7 @@ export
 export
     animate,
     window,
-    visualize
+    visualize,
+    SimulationControls
 
 end # module

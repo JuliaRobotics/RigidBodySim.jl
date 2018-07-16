@@ -2,9 +2,8 @@ julia 0.6
 RigidBodyDynamics 0.6.0
 OrdinaryDiffEq 3.0.1
 DiffEqCallbacks 1.0.0
-RigidBodyTreeInspector 0.4.0
-MeshCatMechanisms 0.0.3
-LoopThrottle 0.0.1
+MeshCatMechanisms 0.1.0
 DocStringExtensions 0.4.1
 Reexport 0.1
-LCMCore 0.2.0
+Blink
+InteractBase

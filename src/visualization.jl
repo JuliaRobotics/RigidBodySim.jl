@@ -4,67 +4,68 @@ module Visualization
 export
     animate,
     window,
-    visualize #, CallbackSet
+    visualize,
+    SimulationControls
 
 """
 Contains the interface that should be implemented by specific viewer types.
 """
 module VisualizerInterface
 
-using DocStringExtensions
-
-"""
-$(TYPEDEF)
-
-Stores visualizer-independent commands used to control the simulation.
-
-A module providing a specific visualizer instance, say `MyVisualizer`, should
-provide a `SimulationCommands` constructor method with the signature
-
-```julia
-SimulationCommands(vis::MyVisualizer)
-```
-
-which returns a `SimulationCommands` object (to be constructed using
-`SimulationCommands()` in addition to performing any visualizer-dependent setup.
-"""
-mutable struct SimulationCommands
+struct SimulationCommands
     terminate::Bool
     pause::Bool
-    SimulationCommands() = (ret = new(); initialize!(ret); ret)
 end
 
-function initialize!(commands::SimulationCommands)
-    commands.terminate = false
-    commands.pause = false
+function SimulationCommands(vis)
+    error("""
+SimulationCommands() is discontinued. You can construct a set of controls,
+open them in a new window, and create a callback from them by doing:
+
+```
+using Blink: Window
+
+controls = SimulationControls()
+open(controls, Window())
+callback = CallbackSet(controls)
+```
+""")
 end
 
-"""
-    visualize(vis, t::Number, state::MechanismState)
 
-Visualize a `Mechanism` at the given time and in the given state using
-visualizer `vis`.
-"""
-function visualize end
+function visualize(args...)
+    error("""
+visualize() is discontinued. You can render a state in a MeshCatMechanisms
+visualizer with:
 
-"""
-    window(vis; kwargs...)
+```
+set_configuration!(vis, configuration(state))
+```
+""")
+end
 
-Create a new window for visualizer `vis`. Visualizer-specific keyword
-arguments (`kwargs`) may be passed in.
-"""
-function window end
+function window(args...; kw...)
+    error("""
+window() is discontinued. You can open a MeshCatMechanisms visualizer
+in a new standalone window with:
 
-"""
-    isinteractive(vis)
+```
+using Blink: Window
+open(vis, Window())
+```
+""")
+end
 
-Return whether or not visualizer `vis` supports user interaction (e.g. sending
-pause and terminate commands).
-"""
-function isinteractive end
+function isinteractive(args...)
+    error("""
+isinteractive() is discontinued. Interactive controls are now separate
+from the visualizer. See SimulationControls.
+""")
+end
 
 end # module
 
+using MeshCatMechanisms
 using DocStringExtensions
 @template (FUNCTIONS, METHODS, MACROS) =
     """
@@ -78,31 +79,43 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import RigidBodySim.Visualization.VisualizerInterface: window, visualize, SimulationCommands, isinteractive
 import DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 import DataStructures
-import RigidBodyDynamics: MechanismState, normalize_configuration!
-import LoopThrottle: @throttle
+import RigidBodyDynamics: MechanismState, normalize_configuration!, configuration
+using Observables: Observable
+using InteractBase: Widget, button, observe
+using WebIO: Node, Scope
+using Blink: Window, body!
+
+struct SimulationStatus
+    terminate::Observable{Bool}
+    pause::Observable{Bool}
+end
+
+function initialize!(commands::SimulationStatus)
+    commands.terminate[] = false
+    commands.pause[] = false
+end
 
 const DEFAULT_PAUSE_POLLINT = 0.05
 
-function CommandHandler(commands::SimulationCommands; pause_pollint::Float64 = DEFAULT_PAUSE_POLLINT)
+function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAULT_PAUSE_POLLINT)
     condition = (u, t, integrator) -> true
-    action = let commands = commands
+    action = let status = status
         function (integrator)
             yield()
-            while commands.pause && !commands.terminate
+            while status.pause[] && !status.terminate[]
                 sleep(pause_pollint)
             end
-            commands.terminate && (commands.terminate = false; terminate!(integrator))
+            status.terminate[] && (status.terminate[] = false; terminate!(integrator))
             u_modified!(integrator, false)
         end
     end
-    initialize = (c, t, u, integrator) -> VisualizerInterface.initialize!(commands)
+    initialize = (c, t, u, integrator) -> VisualizerInterface.initialize!(status)
     DiscreteCallback(condition, action, initialize = initialize, save_positions=(false, false))
 end
 
-function TransformPublisher(state::MechanismState, vis; max_fps = 60.)
+function TransformPublisher(vis::MechanismVisualizer; max_fps = 60.)
     last_update_time = Ref(-Inf)
     condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
         function (u, t, integrator)
@@ -110,95 +123,122 @@ function TransformPublisher(state::MechanismState, vis; max_fps = 60.)
             last_time_step || time() - last_update_time[] >= min_Δt
         end
     end
-    action = let state = state, vis = vis, last_update_time = last_update_time
+    action = let vis = vis, last_update_time = last_update_time
         function (integrator)
             last_update_time[] = time()
-            copy!(state, integrator.u)
-            visualize(vis, integrator.t, state)
+            copy!(vis, integrator.u)
             u_modified!(integrator, false)
         end
     end
     DiscreteCallback(condition, action; save_positions = (false, false))
 end
 
+@deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis, state; max_fps = max_fps)
+
+struct SimulationControls{W <: Widget}
+    terminate::W
+    pause::W
+end
+
+SimulationControls() = SimulationControls(button("terminate"), button("pause"))
+
+function render_default(controls::SimulationControls)
+    Node(:div,
+        Node(:style, """
+            .rigidbodysim-controls button {height: 100vh; width: 100%}
+            .rigidbodysim-controls {
+                display: flex;
+                flex-direction: row;
+            }
+            .rigidbodysim-controls > div {
+                flex-grow: 1;
+                height: 100%
+            }
+        """),
+        controls.pause,
+        controls.terminate,
+        attributes=Dict(:class => "rigidbodysim-controls")
+    )
+end
+
+function Base.open(controls::SimulationControls, window::Window)
+    size(window, 200, 100)
+    body!(window, render_default(controls))
+end
+
+function SimulationStatus(controls::SimulationControls{<:Widget{:button}})
+    terminate = map(!iszero, observe(controls.terminate))
+    pause = map(isodd, observe(controls.pause))
+    SimulationStatus(terminate, pause)
+end
+
+CallbackSet(controls::SimulationControls) = CommandHandler(SimulationStatus(controls))
+
+
 """
-Create the DifferentialEquations.jl callbacks needed for publishing to and receiving commands from a
+Create the DifferentialEquations.jl callbacks needed for publishing to a
 visualizer during simulation.
 
 `max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
 """
-function CallbackSet(vis, state::MechanismState; max_fps = 60.)
-    commands = SimulationCommands(vis)
-    CallbackSet(TransformPublisher(state, vis; max_fps = max_fps), CommandHandler(commands))
-end
+CallbackSet(vis::MechanismVisualizer; max_fps = 60.) = CallbackSet(TransformPublisher(vis; max_fps = max_fps))
 
 """
 Play back a visualization of a RigidBodySim.jl simulation.
 
 Positional arguments:
 
-* `vis` is a visualizer satisfying the RigidBodySim [visualizer interface](@ref vis_interface).
-* `state` is a [`RigidBodyDynamics.MechanismState`](http://JuliaRobotics.github.io/RigidBodyDynamics.jl/release-0.4/mechanismstate.html#RigidBodyDynamics.MechanismState),
-representing the state of the mechanism that was simulated, and will be modified during the visualization.
+* `vis` is a `MeshCatMechanisms.MechanismVisualizer`
 * `sol` is a `DiffEqBase.ODESolution` obtained from a RigidBodySim.jl simulation.
 
-`animate` accepts the following keyword arguments:
+`setanimation` accepts the following keyword arguments:
 
 * `max_fps`: the maximum number of frames per second to draw. Default: `60.0`.
 * `realtime_rate`: can be used to slow down or speed up playback compared to wall time. A `realtime_rate` of `2`
   will result in playback that is sped up 2x. Default: `1.0`.
-* `pause_pollint`: how often to poll for commands coming from the director window when playback is paused. Default: $DEFAULT_PAUSE_POLLINT.
 
 # Examples
 
 Visualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:
 
 ```jldoctest
-using RigidBodySim, RigidBodyDynamics, MechanismGeometries
-import RigidBodyTreeInspector: Visualizer
+using RigidBodySim, RigidBodyDynamics, MeshCatMechanisms, Blink
 urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
 mechanism = parse_urdf(Float64, urdf)
 state = MechanismState(mechanism)
 set_configuration!(state, [0.1; 0.2])
 problem = ODEProblem(Dynamics(mechanism), state, (0., 2.))
 sol = solve(problem, Vern7())
-vis = Visualizer(mechanism, visual_elements(mechanism, URDFVisuals(urdf)))
-window(vis)
-animate(vis, state, sol; realtime_rate = 0.5)
+vis = MechanismVisualizer(mechanism, URDFVisuals(urdf))
+open(vis, Window())
+setanimation!(vis, sol; realtime_rate = 0.5);
 
 # output
 
 ```
 """
-function animate(vis, state::MechanismState, sol::ODESolution;
-        max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = DEFAULT_PAUSE_POLLINT)
+function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer,
+        sol::ODESolution;
+        max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = nothing)
+    if pause_pollint !== nothing
+        warn("pause_pollint is no longer used. You can control the animation directly from the visualizer.")
+    end
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
-
-    commands = SimulationCommands(vis)
     t0, tf = first(sol.t), last(sol.t)
-    framenum = 0
-    walltime0 = time()
-    @throttle framenum while true
-        t = min(tf, t0 + (time() - walltime0) * realtime_rate)
-        while commands.pause && !commands.terminate
-            sleep(pause_pollint)
-            t0 = t
-            walltime0 = time()
+    ts = linspace(t0, tf, (tf - t0) * max_fps)
+    qs = let state = vis.state, sol = sol
+        map(ts) do t
+            x = sol(t)
+            copy!(state, x)
+            normalize_configuration!(state)
+            copy(configuration(state))
         end
-        commands.terminate && (commands.terminate = false; break)
-        x = sol(t)
-        copy!(state, x)
-        normalize_configuration!(state)
-        visualize(vis, t, state)
-        framenum += 1
-        t == tf && break
-        yield()
-    end max_rate = max_fps
+    end
+    # MeshCat animations currently don't support a realtime_rate option
+    # (although it can be adjusted in the GUI), so we instead just scale
+    # the times
+    setanimation!(vis, ts / realtime_rate, qs)
 end
-
-# Visualizer interfaces
-include("visualizers/rigid_body_tree_inspector.jl")
-include("visualizers/meshcat.jl")
 
 end # module
