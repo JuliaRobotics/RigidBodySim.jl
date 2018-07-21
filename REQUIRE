@@ -1,9 +1,10 @@
 julia 0.6
-RigidBodyDynamics 0.6.0
-OrdinaryDiffEq 3.0.1
-DiffEqCallbacks 1.0.0
-MeshCatMechanisms 0.1.0
-DocStringExtensions 0.4.1
-Reexport 0.1
 Blink
+DiffEqCallbacks 1.0.0
+DocStringExtensions 0.4.1
 InteractBase
+MeshCatMechanisms 0.1.0
+Observables 0.1.2
+OrdinaryDiffEq 3.0.1
+Reexport 0.1
+RigidBodyDynamics 0.6.0

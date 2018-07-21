@@ -133,8 +133,6 @@ function TransformPublisher(vis::MechanismVisualizer; max_fps = 60.)
     DiscreteCallback(condition, action; save_positions = (false, false))
 end
 
-@deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis, state; max_fps = max_fps)
-
 struct SimulationControls
     terminate::Widget{:button}
     pause::Widget{:button}
@@ -174,6 +172,7 @@ end
 
 CallbackSet(controls::SimulationControls) = CommandHandler(SimulationStatus(controls))
 
+@deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis; max_fps = max_fps)
 
 """
 Create the DifferentialEquations.jl callbacks needed for publishing to a
