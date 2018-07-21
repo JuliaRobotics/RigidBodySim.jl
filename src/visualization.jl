@@ -135,9 +135,9 @@ end
 
 @deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis, state; max_fps = max_fps)
 
-struct SimulationControls{W <: Widget}
-    terminate::W
-    pause::W
+struct SimulationControls
+    terminate::Widget{:button}
+    pause::Widget{:button}
 end
 
 SimulationControls() = SimulationControls(button("terminate"), button("pause"))
@@ -166,9 +166,9 @@ function Base.open(controls::SimulationControls, window::Window)
     body!(window, render_default(controls))
 end
 
-function SimulationStatus(controls::SimulationControls{<:Widget{:button}})
-    terminate = map(!iszero, observe(controls.terminate))
-    pause = map(isodd, observe(controls.pause))
+function SimulationStatus(controls::SimulationControls)
+    terminate = map!(!iszero, Observable{Bool}(false), controls.terminate)
+    pause = map!(isodd, Observable{Bool}(false), observe(controls.pause))
     SimulationStatus(terminate, pause)
 end
 
