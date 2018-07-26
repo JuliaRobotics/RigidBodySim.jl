@@ -92,9 +92,9 @@ struct SimulationStatus
     pause::Observable{Bool}
 end
 
-function initialize!(commands::SimulationStatus)
-    commands.terminate[] = false
-    commands.pause[] = false
+function initialize!(status::SimulationStatus)
+    status.terminate[] = false
+    status.pause[] = false
 end
 
 const DEFAULT_PAUSE_POLLINT = 0.05
@@ -111,7 +111,7 @@ function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAU
             u_modified!(integrator, false)
         end
     end
-    initialize = (c, t, u, integrator) -> VisualizerInterface.initialize!(status)
+    initialize = (c, t, u, integrator) -> initialize!(status)
     DiscreteCallback(condition, action, initialize = initialize, save_positions=(false, false))
 end
 
@@ -138,7 +138,7 @@ struct SimulationControls
     pause::Widget{:button}
 end
 
-SimulationControls() = SimulationControls(button("terminate"), button("pause"))
+SimulationControls() = SimulationControls(button("Terminate"), button("Pause"))
 
 function render_default(controls::SimulationControls)
     Node(:div,
@@ -160,12 +160,12 @@ function render_default(controls::SimulationControls)
 end
 
 function Base.open(controls::SimulationControls, window::Window)
-    size(window, 200, 100)
+    size(window, 200, 50)
     body!(window, render_default(controls))
 end
 
 function SimulationStatus(controls::SimulationControls)
-    terminate = map!(!iszero, Observable{Bool}(false), controls.terminate)
+    terminate = map!(!iszero, Observable{Bool}(false), observe(controls.terminate))
     pause = map!(isodd, Observable{Bool}(false), observe(controls.pause))
     SimulationStatus(terminate, pause)
 end
