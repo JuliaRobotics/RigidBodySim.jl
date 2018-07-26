@@ -84,19 +84,22 @@ import DataStructures
 import RigidBodyDynamics: MechanismState, normalize_configuration!, configuration
 using Observables: Observable
 using InteractBase: Widget, button, observe
-using WebIO: Node, Scope
+using WebIO: Node, render
 using Blink: Window, body!
 
 struct SimulationStatus
     terminate::Observable{Bool}
     pause::Observable{Bool}
+    time::Observable{Float64}
 end
 
 function initialize!(status::SimulationStatus)
     status.terminate[] = false
     status.pause[] = false
+    status.time[] = 0.0
 end
 
+const TIME_DISPLAY_INTERVAL = 1e-3
 const DEFAULT_PAUSE_POLLINT = 0.05
 
 function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAULT_PAUSE_POLLINT)
@@ -108,6 +111,9 @@ function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAU
                 sleep(pause_pollint)
             end
             status.terminate[] && (status.terminate[] = false; terminate!(integrator))
+            if abs(status.time[] - integrator.t) >= TIME_DISPLAY_INTERVAL
+                status.time[] = integrator.t
+            end
             u_modified!(integrator, false)
         end
     end
@@ -136,9 +142,10 @@ end
 struct SimulationControls
     terminate::Widget{:button}
     pause::Widget{:button}
+    time::Observable{String}
 end
 
-SimulationControls() = SimulationControls(button("Terminate"), button("Pause"))
+SimulationControls() = SimulationControls(button("Terminate"), button("Pause"), Observable("0.0"))
 
 function render_default(controls::SimulationControls)
     Node(:div,
@@ -155,6 +162,7 @@ function render_default(controls::SimulationControls)
         """),
         controls.pause,
         controls.terminate,
+        render(controls.time),
         attributes=Dict(:class => "rigidbodysim-controls")
     )
 end
@@ -165,9 +173,12 @@ function Base.open(controls::SimulationControls, window::Window)
 end
 
 function SimulationStatus(controls::SimulationControls)
-    terminate = map!(!iszero, Observable{Bool}(false), observe(controls.terminate))
-    pause = map!(isodd, Observable{Bool}(false), observe(controls.pause))
-    SimulationStatus(terminate, pause)
+    terminate = map!(!iszero, Observable(false), observe(controls.terminate))
+    pause = map!(isodd, Observable(false), observe(controls.pause))
+    time = Observable(0.0)
+    status = SimulationStatus(terminate, pause, time)
+    map!(t -> @sprintf("%4.2f", t), controls.time, status.time)
+    status
 end
 
 CallbackSet(controls::SimulationControls) = CommandHandler(SimulationStatus(controls))
