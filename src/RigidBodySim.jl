@@ -2,17 +2,21 @@ __precompile__()
 
 module RigidBodySim
 
+using Reexport
+
 import DiffEqBase: ODEProblem, init, solve!, solve, CallbackSet
 import DiffEqCallbacks: PeriodicCallback
 import OrdinaryDiffEq: Tsit5, Vern7, RK4
 
-include("core.jl")
+include("simcore.jl")
 include("control.jl")
 include("visualization.jl")
 
-using .Core
-using .Control
-using .Visualization
+@reexport using JSExpr # FIXME: needed because of https://github.com/JuliaGizmos/JSExpr.jl/issues/13
+
+@reexport using .SimCore
+@reexport using .Control
+@reexport using .Visualization
 
 # Select DifferentialEquations exports
 export
@@ -26,23 +30,24 @@ export
     CallbackSet, # from DiffEqBase
     PeriodicCallback # from DiffEqCallbacks
 
-# Core
-export
-    Dynamics,
-    controlcallback,
-    configuration_renormalizer,
-    zero_control!,
-    RealtimeRateLimiter
+# # Core
+# export
+#     Dynamics,
+#     controlcallback,
+#     configuration_renormalizer,
+#     zero_control!,
+#     RealtimeRateLimiter
 
-# Control
-export
-    PeriodicController
+# # Control
+# export
+#     PeriodicController
 
-# Visualization
-export
-    animate,
-    window,
-    visualize,
-    SimulationControls
+# # Visualization
+# export
+#     animate,
+#     window,
+#     visualize,
+#     SimulationControls,
+#     GUI
 
 end # module

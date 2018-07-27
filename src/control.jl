@@ -16,7 +16,7 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import RigidBodySim.Core: controlcallback
+import RigidBodySim.SimCore: controlcallback
 import DiffEqBase
 import DiffEqBase: ODEProblem, CallbackSet, u_modified!
 import DiffEqCallbacks: PeriodicCallback

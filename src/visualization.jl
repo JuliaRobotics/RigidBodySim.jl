@@ -5,67 +5,12 @@ export
     animate,
     window,
     visualize,
-    SimulationControls
-
-"""
-Contains the interface that should be implemented by specific viewer types.
-"""
-module VisualizerInterface
-
-struct SimulationCommands
-    terminate::Bool
-    pause::Bool
-end
-
-function SimulationCommands(vis)
-    error("""
-SimulationCommands() is discontinued. You can construct a set of controls,
-open them in a new window, and create a callback from them by doing:
-
-```
-using Blink: Window
-
-controls = SimulationControls()
-open(controls, Window())
-callback = CallbackSet(controls)
-```
-""")
-end
-
-
-function visualize(args...)
-    error("""
-visualize() is discontinued. You can render a state in a MeshCatMechanisms
-visualizer with:
-
-```
-set_configuration!(vis, configuration(state))
-```
-""")
-end
-
-function window(args...; kw...)
-    error("""
-window() is discontinued. You can open a MeshCatMechanisms visualizer
-in a new standalone window with:
-
-```
-using Blink: Window
-open(vis, Window())
-```
-""")
-end
-
-function isinteractive(args...)
-    error("""
-isinteractive() is discontinued. Interactive controls are now separate
-from the visualizer. See SimulationControls.
-""")
-end
-
-end # module
+    SimulationControls,
+    GUI,
+    setanimation!
 
 using MeshCatMechanisms
+
 using DocStringExtensions
 @template (FUNCTIONS, METHODS, MACROS) =
     """
@@ -79,13 +24,16 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
-import DataStructures
-import RigidBodyDynamics: MechanismState, normalize_configuration!, configuration
+using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
+using DataStructures
+using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
+using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
 using WebIO: Node, render
-using Blink: Window, body!, title
+# using Blink: Window, body!, title
+using Blink
+using CSSUtil: vbox
 
 struct SimulationStatus
     terminate::Observable{Bool}
@@ -179,7 +127,7 @@ function render_default(controls::SimulationControls)
                     render(controls.time),
                     style = Dict(:fontSize => "10pt", :fontFamily => "sans-serif",
                                 :userSelect => "none", :cursor => "default",
-                                :height => "2.5em", :width => "8em", :marginRight => "0.5em", :lineHeight => "2.5em",
+                                :height => "2.5em", :width => "8em", :marginLeft => "0.5em", :marginRight => "0.5em", :lineHeight => "2.5em",
                                 :display => "flex", :justifyContent => "space-between")
                 ),
                 Node(:div, controls.pause, attributes = Dict(:class => "rigidbodysim-controls-pause")),
@@ -198,13 +146,9 @@ function Base.open(controls::SimulationControls, window::Window)
     body!(window, render_default(controls))
 end
 
-function Base.open(controls::SimulationControls, vis::MechanismVisualizer, window::Window)
-    body!(window, vbox(render_default(controls), iframe(vis.visualizer.core)))
-end
-
 function SimulationStatus(controls::SimulationControls)
     terminate = map!(!iszero, Observable(false), observe(controls.terminate))
-    pause = map!(x -> (@show x; isodd(x)), Observable(false), observe(controls.pause))
+    pause = map!(isodd, Observable(false), observe(controls.pause))
     time = Observable(0.0)
     status = SimulationStatus(terminate, pause, time)
     map!(t -> HTML(@sprintf("%4.2f", t)), controls.time, status.time)
@@ -212,6 +156,24 @@ function SimulationStatus(controls::SimulationControls)
 end
 
 CallbackSet(controls::SimulationControls) = CommandHandler(SimulationStatus(controls))
+
+struct GUI
+    visualizer::MechanismVisualizer
+    controls::SimulationControls
+end
+
+GUI(visualizer::MechanismVisualizer) = GUI(visualizer, SimulationControls())
+GUI(mechanism::Mechanism, args...) = GUI(MechanismVisualizer(mechanism, args...))
+
+function Base.open(gui::GUI, window::Window)
+    title(window, "RigidBodySim")
+    # TODO: vbox(render_default(gui.controls), iframe(gui.visualizer.visualizer.core))
+    body!(window, vbox(render_default(gui.controls), gui.visualizer.visualizer.core))
+end
+
+Base.open(gui::GUI) = open(gui, Window())
+
+CallbackSet(gui::GUI) = CallbackSet(CallbackSet(gui.controls), CallbackSet(gui.visualizer))
 
 @deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis; max_fps = max_fps)
 
@@ -257,8 +219,7 @@ setanimation!(vis, sol; realtime_rate = 0.5);
 
 ```
 """
-function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer,
-        sol::ODESolution;
+function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolution;
         max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = nothing)
     if pause_pollint !== nothing
         warn("pause_pollint is no longer used. You can control the animation directly from the visualizer.")
@@ -280,5 +241,63 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer,
     # the times
     setanimation!(vis, ts / realtime_rate, qs)
 end
+
+"""
+Contains the interface that should be implemented by specific viewer types.
+"""
+module VisualizerInterface
+
+struct SimulationCommands
+    terminate::Bool
+    pause::Bool
+end
+
+function SimulationCommands(vis)
+    error("""
+SimulationCommands() is discontinued. You can construct a set of controls,
+open them in a new window, and create a callback from them by doing:
+
+```
+using Blink: Window
+
+controls = SimulationControls()
+open(controls, Window())
+callback = CallbackSet(controls)
+```
+""")
+end
+
+
+function visualize(args...)
+    error("""
+visualize() is discontinued. You can render a state in a MeshCatMechanisms
+visualizer with:
+
+```
+set_configuration!(vis, configuration(state))
+```
+""")
+end
+
+function window(args...; kw...)
+    error("""
+window() is discontinued. You can open a MeshCatMechanisms visualizer
+in a new standalone window with:
+
+```
+using Blink: Window
+open(vis, Window())
+```
+""")
+end
+
+function isinteractive(args...)
+    error("""
+isinteractive() is discontinued. Interactive controls are now separate
+from the visualizer. See SimulationControls.
+""")
+end
+
+end # module
 
 end # module
