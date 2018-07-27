@@ -142,33 +142,54 @@ end
 struct SimulationControls
     terminate::Widget{:button}
     pause::Widget{:button}
-    time::Observable{String}
+    time::Observable{HTML{String}}
 end
 
-SimulationControls() = SimulationControls(button("Terminate"), button("Pause"), Observable("0.0"))
+SimulationControls() = SimulationControls(button("Terminate"), button("Pause"), Observable(HTML("0.0")))
 
+# Icons taken from the freely available set at https://icons8.com/color-icons/
 function render_default(controls::SimulationControls)
     Node(:div,
         Node(:style, """
-            .rigidbodysim-controls button {height: 100vh; width: 100%}
-            .rigidbodysim-controls {
-                display: flex;
-                flex-direction: row;
+            .rigidbodysim-controls button {
+                height: 70vh;
+                width: 50vw;
+                image-rendering: pixelated;
+                color: transparent;
+                user-select: none;
             }
-            .rigidbodysim-controls > div {
-                flex-grow: 1;
-                height: 100%
+            .rigidbodysim-controls button:active {
+                filter: brightness(50%);
             }
+            .rigidbodysim-controls-pause button {
+                background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADUSURBVGhD7Y6xCQMBEMN+lSydRTNAgkGdVR8ELFAlF37GGGOMMcb4T17vz9ckF7aN5HvsTCQXto3ke+xMJBe2jeR77EwkF7aN5HvsTCQXto3ke+xMJBe2jeR77EwkF7aN5HvsTCQXto3ke+xMJBe2jeR77EwkF7aN5HvsTCQXto3ke+xMJBe2jeR77EwkF7aN5HvsTCQXto3ke+xMJBe2jeR77EwkF7aN5HvsTCQXto3ke+xMJBe2jeR77EwkF7aN5HvsTCQXto3kMcYYY4wx/orn+QEf136Pgv8IWQAAAABJRU5ErkJggg==) no-repeat;
+                background-size: cover;
+            }
+            .rigidbodysim-controls-terminate button {
+                background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACQSURBVGhD7c6xCcBAAMPAXyz7j5U0Kt05GB50oNb4SJIkSfd5n/P+GbM76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTs5IkSdI1zvkACnV8XnyMZlcAAAAASUVORK5CYII=) no-repeat;
+                background-size: cover;
+            }
+            .rigidbodysim-controls > div {flex-grow: 1; }
         """),
-        controls.pause,
-        controls.terminate,
-        render(controls.time),
-        attributes=Dict(:class => "rigidbodysim-controls")
+        Node(:div,
+            Node(:div,
+                 Node(:div, "Time:"),
+                render(controls.time),
+                style = Dict(:height => "20vh", :display => "flex", :justifyContent => "space-between", :padding => "4.9vh", :fontSize => "15vh")
+            ),
+            Node(:div,
+                Node(:div, controls.pause, attributes = Dict(:class => "rigidbodysim-controls-pause")),
+                Node(:div, controls.terminate, attributes = Dict(:class => "rigidbodysim-controls-terminate")),
+                attributes = Dict(:class => "rigidbodysim-controls"),
+                style = Dict(:display => "flex")
+            )
+        ),
+        style = Dict(:overflow => "hidden")
     )
 end
 
 function Base.open(controls::SimulationControls, window::Window)
-    size(window, 200, 50)
+    size(window, 200, 125)
     body!(window, render_default(controls))
 end
 
@@ -177,7 +198,7 @@ function SimulationStatus(controls::SimulationControls)
     pause = map!(isodd, Observable(false), observe(controls.pause))
     time = Observable(0.0)
     status = SimulationStatus(terminate, pause, time)
-    map!(t -> @sprintf("%4.2f", t), controls.time, status.time)
+    map!(t -> HTML(@sprintf("%4.2f s", t)), controls.time, status.time)
     status
 end
 
