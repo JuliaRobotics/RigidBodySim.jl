@@ -85,7 +85,7 @@ import RigidBodyDynamics: MechanismState, normalize_configuration!, configuratio
 using Observables: Observable
 using InteractBase: Widget, button, observe
 using WebIO: Node, render
-using Blink: Window, body!
+using Blink: Window, body!, title
 
 struct SimulationStatus
     terminate::Observable{Bool}
@@ -99,7 +99,7 @@ function initialize!(status::SimulationStatus)
     status.time[] = 0.0
 end
 
-const TIME_DISPLAY_INTERVAL = 1e-3
+const TIME_DISPLAY_INTERVAL = 1e-2
 const DEFAULT_PAUSE_POLLINT = 0.05
 
 function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAULT_PAUSE_POLLINT)
@@ -145,17 +145,18 @@ struct SimulationControls
     time::Observable{HTML{String}}
 end
 
-SimulationControls() = SimulationControls(button("Terminate"), button("Pause"), Observable(HTML("0.0")))
+SimulationControls() = SimulationControls(button(""), button(""), Observable(HTML("0.0")))
 
 # Icons taken from the freely available set at https://icons8.com/color-icons/
 function render_default(controls::SimulationControls)
     Node(:div,
         Node(:style, """
             .rigidbodysim-controls button {
-                height: 70vh;
-                width: 50vw;
+                height: 2.5em;
+                width: 2.5em;
+                margin: 0.1em;
+                padding: 0.2em 0.2em;
                 image-rendering: pixelated;
-                color: transparent;
                 user-select: none;
             }
             .rigidbodysim-controls button:active {
@@ -169,19 +170,22 @@ function render_default(controls::SimulationControls)
                 background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACQSURBVGhD7c6xCcBAAMPAXyz7j5U0Kt05GB50oNb4SJIkSfd5n/P+GbM76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTszvpRBOzO+lEE7M76UQTs5IkSdI1zvkACnV8XnyMZlcAAAAASUVORK5CYII=) no-repeat;
                 background-size: cover;
             }
-            .rigidbodysim-controls > div {flex-grow: 1; }
+            .rigidbodysim-controls > div {flex-grow: 0; ; }
         """),
         Node(:div,
             Node(:div,
-                 Node(:div, "Time:"),
-                render(controls.time),
-                style = Dict(:height => "20vh", :display => "flex", :justifyContent => "space-between", :padding => "4.9vh", :fontSize => "15vh")
-            ),
-            Node(:div,
+                Node(:div,
+                    Node(:div, "Time:"),
+                    render(controls.time),
+                    style = Dict(:fontSize => "10pt", :fontFamily => "sans-serif",
+                                :userSelect => "none", :cursor => "default",
+                                :height => "2.5em", :width => "8em", :marginRight => "0.5em", :lineHeight => "2.5em",
+                                :display => "flex", :justifyContent => "space-between")
+                ),
                 Node(:div, controls.pause, attributes = Dict(:class => "rigidbodysim-controls-pause")),
                 Node(:div, controls.terminate, attributes = Dict(:class => "rigidbodysim-controls-terminate")),
                 attributes = Dict(:class => "rigidbodysim-controls"),
-                style = Dict(:display => "flex")
+                style = Dict(:display => "flex", :flexWrap => "wrap")
             )
         ),
         style = Dict(:overflow => "hidden")
@@ -189,16 +193,21 @@ function render_default(controls::SimulationControls)
 end
 
 function Base.open(controls::SimulationControls, window::Window)
-    size(window, 200, 125)
+    size(window, 200, 50)
+    title(window, "RigidBodySim controls")
     body!(window, render_default(controls))
+end
+
+function Base.open(controls::SimulationControls, vis::MechanismVisualizer, window::Window)
+    body!(window, vbox(render_default(controls), iframe(vis.visualizer.core)))
 end
 
 function SimulationStatus(controls::SimulationControls)
     terminate = map!(!iszero, Observable(false), observe(controls.terminate))
-    pause = map!(isodd, Observable(false), observe(controls.pause))
+    pause = map!(x -> (@show x; isodd(x)), Observable(false), observe(controls.pause))
     time = Observable(0.0)
     status = SimulationStatus(terminate, pause, time)
-    map!(t -> HTML(@sprintf("%4.2f s", t)), controls.time, status.time)
+    map!(t -> HTML(@sprintf("%4.2f", t)), controls.time, status.time)
     status
 end
 
