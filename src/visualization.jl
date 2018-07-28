@@ -28,7 +28,6 @@ using DocStringExtensions
     """
 
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
-using DataStructures
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
 using MeshCatMechanisms: setanimation!
 using Observables: Observable
@@ -36,6 +35,8 @@ using InteractBase: Widget, button, observe
 using WebIO: Node, render
 using Blink: Window, body!, title
 using CSSUtil: vbox
+
+using DataStructures: top
 
 struct SimulationStatus
     terminate::Observable{Bool}
@@ -75,7 +76,7 @@ function TransformPublisher(vis::MechanismVisualizer; max_fps = 60.)
     last_update_time = Ref(-Inf)
     condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
         function (u, t, integrator)
-            last_time_step = length(integrator.opts.tstops) == 1 && t == DataStructures.top(integrator.opts.tstops)
+            last_time_step = length(integrator.opts.tstops) == 1 && t == top(integrator.opts.tstops)
             last_time_step || time() - last_update_time[] >= min_Δt
         end
     end

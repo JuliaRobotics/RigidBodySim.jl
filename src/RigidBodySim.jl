@@ -16,13 +16,13 @@ include("visualization.jl")
 @reexport using .Visualization
 
 # Select DifferentialEquations exports
-import DiffEqBase: ODEProblem, init, solve!, solve, CallbackSet
+using DiffEqBase: ODEProblem, init, solve!, solve, CallbackSet
 export ODEProblem, init, solve!, solve, CallbackSet
 
-import DiffEqCallbacks: PeriodicCallback
+using DiffEqCallbacks: PeriodicCallback
 export PeriodicCallback
 
-import OrdinaryDiffEq: Tsit5, Vern7, RK4
+using OrdinaryDiffEq: Tsit5, Vern7, RK4
 export Tsit5, Vern7, RK4
 
 end # module

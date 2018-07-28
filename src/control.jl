@@ -16,11 +16,13 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import RigidBodySim.Core: controlcallback
+using DiffEqBase: ODEProblem, CallbackSet, u_modified!
+using DiffEqCallbacks: PeriodicCallback
+using RigidBodyDynamics: MechanismState
+
+import RigidBodySim.Core
 import DiffEqBase
-import DiffEqBase: ODEProblem, CallbackSet, u_modified!
-import DiffEqCallbacks: PeriodicCallback
-import RigidBodyDynamics: MechanismState
+import DiffEqCallbacks
 
 """
 A `PeriodicController` can be used to simulate a digital controller that runs at a
@@ -104,7 +106,7 @@ struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
     end
 end
 
-function PeriodicCallback(controller::PeriodicController)
+function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     periodic_initialize = let controller = controller
         function (c, u, t, integrator)
             controller.docontrol[] = true
@@ -121,7 +123,7 @@ function PeriodicCallback(controller::PeriodicController)
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
 end
 
-controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
+Core.controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
 
 struct PeriodicControlFailure <: Exception
     Δt
