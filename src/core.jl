@@ -20,12 +20,11 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import DiffEqBase:
+using DiffEqBase:
     ODEProblem, DiscreteCallback, u_modified!, CallbackSet
-import DiffEqCallbacks:
+using DiffEqCallbacks:
     PeriodicCallback
-import DiffEqDiffTools
-import RigidBodyDynamics:
+using RigidBodyDynamics:
     Mechanism,
     MechanismState, DynamicsResult,
     StateCache, DynamicsResultCache, SegmentedVectorCache,
@@ -35,6 +34,8 @@ import RigidBodyDynamics:
     set_configuration!, normalize_configuration!,
     configuration_derivative!, dynamics!,
     ranges
+
+import DiffEqDiffTools
 import ForwardDiff
 
 """
