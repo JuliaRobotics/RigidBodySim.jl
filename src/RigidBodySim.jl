@@ -30,24 +30,4 @@ export
     CallbackSet, # from DiffEqBase
     PeriodicCallback # from DiffEqCallbacks
 
-# # Core
-# export
-#     Dynamics,
-#     controlcallback,
-#     configuration_renormalizer,
-#     zero_control!,
-#     RealtimeRateLimiter
-
-# # Control
-# export
-#     PeriodicController
-
-# # Visualization
-# export
-#     animate,
-#     window,
-#     visualize,
-#     SimulationControls,
-#     GUI
-
 end # module

@@ -2,12 +2,15 @@ module Visualization
 
 # user-side functionality
 export
-    animate,
-    window,
-    visualize,
     SimulationControls,
     GUI,
     setanimation!
+
+# deprecated:
+export
+    animate,
+    window,
+    visualize
 
 using MeshCatMechanisms
 
@@ -31,8 +34,7 @@ using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
 using WebIO: Node, render
-# using Blink: Window, body!, title
-using Blink
+using Blink: Window, body!, title
 using CSSUtil: vbox
 
 struct SimulationStatus
