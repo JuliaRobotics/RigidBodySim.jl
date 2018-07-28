@@ -96,6 +96,11 @@ struct SimulationControls
     time::Observable{HTML{String}}
 end
 
+"""
+Create a new `SimulationControls` object, which may be used to pause and terminate the simulation.
+
+The controls can be displayed in a standalone window using `open(controls, Blink.Window())`.
+"""
 SimulationControls() = SimulationControls(button(""), button(""), Observable(HTML("0.0")))
 
 # Icons taken from the freely available set at https://icons8.com/color-icons/
@@ -227,7 +232,7 @@ Positional arguments:
 
 Visualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:
 
-```jldoctest
+```jldoctest; output = false
 using RigidBodySim, RigidBodyDynamics, MeshCatMechanisms, Blink
 urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
 mechanism = parse_urdf(Float64, urdf)

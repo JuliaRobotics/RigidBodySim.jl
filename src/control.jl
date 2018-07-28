@@ -20,9 +20,10 @@ using DiffEqBase: ODEProblem, CallbackSet, u_modified!
 using DiffEqCallbacks: PeriodicCallback
 using RigidBodyDynamics: MechanismState
 
-import RigidBodySim.Core
 import DiffEqBase
 import DiffEqCallbacks
+
+import RigidBodySim.Core: controlcallback
 
 """
 A `PeriodicController` can be used to simulate a digital controller that runs at a
@@ -57,7 +58,7 @@ RigidBodySim-provided `DiffEqBase.ODEProblem` constructor overload.
 In the following example, a `PeriodicController` is used to simulate
 a digital PD controller running at a fixed rate of 200 Hz.
 
-```jldoctest
+```jldoctest; output = false
 julia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq
 
 julia> mechanism = parse_urdf(Float64, Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf"));
@@ -75,7 +76,7 @@ julia> τ = zeros(velocity(state)); Δt = 1 / 200
 
 julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));
 
-julia> sol = solve(problem, Tsit5());
+julia> sol = solve(problem, Vern7());
 
 julia> sol.u[end]
 4-element Array{Float64,1}:
@@ -123,7 +124,7 @@ function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
 end
 
-Core.controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
+controlcallback(controller::PeriodicController) = PeriodicCallback(controller)
 
 struct PeriodicControlFailure <: Exception
     Δt
