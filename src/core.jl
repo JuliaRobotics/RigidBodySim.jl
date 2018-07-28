@@ -1,4 +1,4 @@
-module SimCore
+module Core
 
 export
     Dynamics,
