@@ -27,6 +27,7 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
+using Compat
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
 using MeshCatMechanisms: setanimation!
@@ -83,7 +84,7 @@ function TransformPublisher(vis::MechanismVisualizer; max_fps = 60.)
     action = let vis = vis, last_update_time = last_update_time
         function (integrator)
             last_update_time[] = time()
-            copy!(vis, integrator.u)
+            Compat.copyto!(vis, integrator.u)
             u_modified!(integrator, false)
         end
     end
@@ -260,7 +261,7 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolut
     qs = let state = vis.state, sol = sol
         map(ts) do t
             x = sol(t)
-            copy!(state, x)
+            Compat.copyto!(state, x)
             normalize_configuration!(state)
             copy(configuration(state))
         end

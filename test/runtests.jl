@@ -2,15 +2,18 @@ module RigidBodySimTest
 
 using Compat
 using Compat.Test
+using Compat.Random
+
+using RigidBodySim
 
 using RigidBodyDynamics
-using RigidBodySim
-using MechanismGeometries
-using MeshCatMechanisms
 
 using DiffEqCallbacks: DiscreteCallback
 using DiffEqBase: add_tstop!
 using OrdinaryDiffEq: Rodas4P
+
+using MechanismGeometries
+using MeshCatMechanisms
 using InteractBase: observe
 using Blink: Window
 
@@ -42,9 +45,42 @@ end
     final_time = 5.
     problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
-    copy!(state, x0)
+    Compat.copyto!(state, x0)
     ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
     @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
+end
+
+@testset "renormalization callback" begin
+    mechanism = rand_tree_mechanism(Float64, QuaternionFloating{Float64})
+    floatingjoint = first(joints(mechanism))
+    state = MechanismState(mechanism)
+
+    rand!(configuration(state))
+    @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+
+    problem = ODEProblem(Dynamics(mechanism), state, (0., 1e-3))
+    sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
+
+    Compat.copyto!(state, sol[end])
+    @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
+end
+
+@testset "RealtimeRateLimiter" begin
+    du = [0; 0]
+    u0 = [0.; 0.]
+    dynamics = (u, p, t) -> eltype(u).(du)
+    tmin = 10.1
+    tmax = 12.2
+    for max_rate in [2.0, 0.5]
+        prob = ODEProblem(dynamics, u0, (tmin, tmax))
+        rate_limiter = RealtimeRateLimiter(max_rate = max_rate)
+        sol = solve(prob, Tsit5(); callback = rate_limiter)
+        soltime = @elapsed solve(prob, Tsit5(); callback = rate_limiter)
+        expected = (tmax - tmin) / max_rate
+        @show soltime
+        @show expected
+        @test soltime ≈ expected atol = 0.5
+    end
 end
 
 @testset "visualizer callbacks" begin
@@ -125,39 +161,6 @@ end
     @test sol.t[end] > 2 * dt
     @test sol.t[end] < tfinal
     println("last(sol.t) after early termination 3: $(last(sol.t))")
-end
-
-@testset "renormalization callback" begin
-    mechanism = rand_tree_mechanism(Float64, QuaternionFloating{Float64})
-    floatingjoint = first(joints(mechanism))
-    state = MechanismState(mechanism)
-
-    rand!(configuration(state))
-    @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
-
-    problem = ODEProblem(Dynamics(mechanism), state, (0., 1e-3))
-    sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
-
-    copy!(state, sol[end])
-    @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
-end
-
-@testset "RealtimeRateLimiter" begin
-    du = [0; 0]
-    u0 = [0.; 0.]
-    dynamics = (u, p, t) -> eltype(u).(du)
-    tmin = 10.1
-    tmax = 12.2
-    for max_rate in [2.0, 0.5]
-        prob = ODEProblem(dynamics, u0, (tmin, tmax))
-        rate_limiter = RealtimeRateLimiter(max_rate = max_rate)
-        sol = solve(prob, Tsit5(); callback = rate_limiter)
-        soltime = @elapsed solve(prob, Tsit5(); callback = rate_limiter)
-        expected = (tmax - tmin) / max_rate
-        @show soltime
-        @show expected
-        @test soltime ≈ expected atol = 0.5
-    end
 end
 
 @testset "ODESolution animation" begin
