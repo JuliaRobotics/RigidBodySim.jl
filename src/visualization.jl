@@ -146,6 +146,7 @@ function Base.open(controls::SimulationControls, window::Window)
     size(window, 200, 55)
     title(window, "RigidBodySim controls")
     body!(window, render_default(controls))
+    nothing
 end
 
 function SimulationStatus(controls::SimulationControls)
@@ -164,18 +165,38 @@ struct GUI
     controls::SimulationControls
 end
 
+"""
+Create a new RigidBodySim graphical user interface from a `MeshCatMechanisms.MechanismVisualizer`.
+
+Use `open(gui)` to open the GUI in a standalone window.
+"""
 GUI(visualizer::MechanismVisualizer) = GUI(visualizer, SimulationControls())
+
+"""
+Create a new RigidBodySim graphical user interface for the given Mechanism.
+All arguments are passed on to the `MeshCatMechanisms.MechanismVisualizer` constructor.
+
+Use `open(gui)` to open the GUI in a standalone window.
+"""
 GUI(mechanism::Mechanism, args...) = GUI(MechanismVisualizer(mechanism, args...))
 
 function Base.open(gui::GUI, window::Window)
     title(window, "RigidBodySim")
     # TODO: vbox(render_default(gui.controls), iframe(gui.visualizer.visualizer.core))
     body!(window, vbox(render_default(gui.controls), gui.visualizer.visualizer.core))
+    wait(gui)
+    nothing
 end
 
 Base.open(gui::GUI) = open(gui, Window())
+Base.wait(gui::GUI) = wait(gui.visualizer)
 
-CallbackSet(gui::GUI) = CallbackSet(CallbackSet(gui.controls), CallbackSet(gui.visualizer))
+"""
+Create the DifferentialEquations.jl callbacks associated with the [GUI](@ref).
+
+`max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
+"""
+CallbackSet(gui::GUI; max_fps=60) = CallbackSet(CallbackSet(gui.controls), CallbackSet(gui.visualizer; max_fps = max_fps))
 
 @deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis; max_fps = max_fps)
 
