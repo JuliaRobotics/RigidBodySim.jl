@@ -143,7 +143,7 @@ function render_default(controls::SimulationControls)
 end
 
 function Base.open(controls::SimulationControls, window::Window)
-    size(window, 200, 50)
+    size(window, 200, 55)
     title(window, "RigidBodySim controls")
     body!(window, render_default(controls))
 end
