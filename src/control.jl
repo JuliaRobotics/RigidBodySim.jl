@@ -77,7 +77,7 @@ julia> τ = zeros(velocity(state)); Δt = 1 / 200
 
 julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));
 
-julia> sol = solve(problem, Vern7());
+julia> sol = solve(problem, Tsit5());
 
 julia> sol.u[end]
 4-element Array{Float64,1}:
@@ -98,27 +98,26 @@ struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
     control!::C
     initialize::I
     save_positions::Tuple{Bool, Bool}
-    docontrol::Base.RefValue{Bool}
+    next_control_time::Base.RefValue{T}
     last_control_time::Base.RefValue{T} # only used for checking that PeriodicCallback is correctly set up
 
     function PeriodicController(τ::Tau, Δt::T, control!::C;
             initialize::I = DiffEqBase.INITIALIZE_DEFAULT,
             save_positions = (false, false)) where {Tau<:AbstractVector, T<:Number, C, I}
-        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(true), Ref(T(NaN)))
+        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(T(NaN)), Ref(T(NaN)))
     end
 end
 
 function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     periodic_initialize = let controller = controller
         function (c, u, t, integrator)
-            controller.docontrol[] = true
             controller.last_control_time[] = NaN
             controller.initialize(c, u, t, integrator)
         end
     end
     f = let controller = controller
         function (integrator)
-            controller.docontrol[] = true
+            controller.next_control_time[] = integrator.t + controller.Δt
             u_modified!(integrator, false)
         end
     end
@@ -146,9 +145,8 @@ function Base.showerror(io::IO, e::PeriodicControlFailure)
 end
 
 function (controller::PeriodicController)(τ::AbstractVector, t, state)
-    if controller.docontrol[]
+    if (t == controller.next_control_time[] && t != controller.last_control_time[]) || isnan(controller.last_control_time[])
         controller.control!(controller.τ, t, state)
-        controller.docontrol[] = false
         controller.last_control_time[] = t
     end
     Compat.copyto!(τ, controller.τ)

@@ -235,9 +235,9 @@ end
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 
-    # ensure that we can solve the same problem again without errors
+    # ensure that we can solve the same problem again without errors (with Tsit5, see issue #68)
     empty!(controltimes)
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol = solve(problem, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 
     # issue #60
