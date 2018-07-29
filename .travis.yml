@@ -14,8 +14,8 @@ matrix:
     - os: osx
       julia: nightly
       env: TESTCMD="julia"
-allow_failures:
-  - julia: nightly
+  allow_failures:
+    - julia: nightly
 branches:
   only:
     - master
