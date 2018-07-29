@@ -165,7 +165,7 @@ stopped to check whether to sleep (and for how long). Specifically, this operati
 every `poll_interval / max_rate` *in terms of integration time*, which corresponds to approximately
 every `poll_interval` seconds *wall time* if `max_rate` is actually achieved.
 """
-function RealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 60, save_positions = (false, false))
+function RealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 60, save_positions = (false, false), reset_interval = 1.0)
     T = promote_type(typeof(max_rate), typeof(poll_interval))
     state = RealtimeRateLimiterState{T}()
     limit_rate = let state = state, max_rate = max_rate, poll_interval = poll_interval # https://github.com/JuliaLang/julia/issues/15276
@@ -179,16 +179,18 @@ function RealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 60, save_posit
                 Δsimtime = simtime - state.simtime0
                 minΔwalltime = Δsimtime / max_rate
                 Δwalltime = time() - state.walltime0
-                sleeptime = Δsimtime / max_rate - Δwalltime
-                if sleeptime > 0
+                sleeptime = minΔwalltime - Δwalltime
+                if sleeptime > 1e-3 # minimum time for `sleep` function
                     sleep(sleeptime)
                 end
-                # Note: more accurate results can be achieved by never doing the following reset,
-                # (since there's no accumulated drift), but if there's a slowdown in
-                # integration rate at some point, the maximum rate would not be enforced after
-                # the slowdown
-                state.simtime0 = simtime
-                state.walltime0 = time()
+                if Δwalltime > reset_interval
+                    # Reset every once in a while. If we don't do this, a slowdown in simulation
+                    # rate at some point will cause the maximum rate to not be enforced until the
+                    # simulation catches up. Don't do this too often to get more accurate results
+                    # (drift doesn't accumulate as quickly).
+                    state.simtime0 = simtime
+                    state.walltime0 = time()
+                end
             end
             u_modified!(integrator, false)
         end
