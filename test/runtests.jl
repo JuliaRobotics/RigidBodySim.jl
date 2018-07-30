@@ -232,10 +232,10 @@ end
     problem = ODEProblem(Dynamics(mechanism, controller), state, (0., final_time))
 
     # ensure that controller gets called at appropriate times:
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol = solve(problem, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 
-    # ensure that we can solve the same problem again without errors
+    # ensure that we can solve the same problem again without errors and with a different integrator
     empty!(controltimes)
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))

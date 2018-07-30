@@ -77,7 +77,7 @@ julia> τ = zeros(velocity(state)); Δt = 1 / 200
 
 julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));
 
-julia> sol = solve(problem, Vern7());
+julia> sol = solve(problem, Tsit5());
 
 julia> sol.u[end]
 4-element Array{Float64,1}:
@@ -119,7 +119,7 @@ function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     f = let controller = controller
         function (integrator)
             controller.docontrol[] = true
-            u_modified!(integrator, false)
+            u_modified!(integrator, true) # see https://github.com/JuliaRobotics/RigidBodySim.jl/pull/72#issuecomment-408911804
         end
     end
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
