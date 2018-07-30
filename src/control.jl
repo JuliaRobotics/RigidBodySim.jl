@@ -77,14 +77,7 @@ julia> τ = zeros(velocity(state)); Δt = 1 / 200
 
 julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));
 
-julia> sol = solve(problem, Vern7());
-
-julia> sol.u[end]
-4-element Array{Float64,1}:
- -3.25923e-5
- -1.67942e-5
-  8.16715e-7
-  1.55292e-8
+julia> sol = solve(problem, Tsit5());
 
 julia> @assert all(x -> isapprox(x, 0, atol = 1e-4), sol.u[end]) # ensure state converges to zero
 
@@ -119,7 +112,7 @@ function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     f = let controller = controller
         function (integrator)
             controller.docontrol[] = true
-            u_modified!(integrator, false)
+            u_modified!(integrator, true) # see https://github.com/JuliaRobotics/RigidBodySim.jl/pull/72#issuecomment-408911804
         end
     end
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
@@ -152,8 +145,7 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
         controller.last_control_time[] = t
     end
     Compat.copyto!(τ, controller.τ)
-    time_since_last_control = t - controller.last_control_time[]
-    if time_since_last_control > controller.Δt || time_since_last_control < zero(time_since_last_control)
+    if t > controller.last_control_time[] + controller.Δt || t < controller.last_control_time[]
         throw(PeriodicControlFailure(controller.Δt, t, controller.last_control_time[]))
     end
     τ
