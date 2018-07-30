@@ -79,13 +79,6 @@ julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdco
 
 julia> sol = solve(problem, Tsit5());
 
-julia> sol.u[end]
-4-element Array{Float64,1}:
- -3.25923e-5
- -1.67942e-5
-  8.16715e-7
-  1.55292e-8
-
 julia> @assert all(x -> isapprox(x, 0, atol = 1e-4), sol.u[end]) # ensure state converges to zero
 
 julia> controlcalls[]
