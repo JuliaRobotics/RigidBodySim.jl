@@ -152,8 +152,7 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
         controller.last_control_time[] = t
     end
     Compat.copyto!(τ, controller.τ)
-    time_since_last_control = t - controller.last_control_time[]
-    if time_since_last_control > controller.Δt || time_since_last_control < zero(time_since_last_control)
+    if t > controller.last_control_time[] + controller.Δt || t < controller.last_control_time[]
         throw(PeriodicControlFailure(controller.Δt, t, controller.last_control_time[]))
     end
     τ
