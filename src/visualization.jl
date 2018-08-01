@@ -257,7 +257,7 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolut
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
     t0, tf = first(sol.t), last(sol.t)
-    ts = linspace(t0, tf, (tf - t0) * max_fps)
+    ts = linspace(t0, tf, round(Int, (tf - t0) * max_fps + 1))
     qs = let state = vis.state, sol = sol
         map(ts) do t
             x = sol(t)
