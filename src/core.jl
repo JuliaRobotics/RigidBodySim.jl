@@ -153,7 +153,7 @@ end
 """
     RealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 30; save_positions = (false, false))
 
-A `DiscreteCallback` that limit the rate of integration so that integration time `t`
+A `DiscreteCallback` that limits the rate of integration so that integration time `t`
 increases at a rate no higher than `max_rate` compared to wall time.
 
 A `RealtimeRateLimiter` can be used, for example, if you want to simulate a physical system
