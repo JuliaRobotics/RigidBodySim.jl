@@ -3,6 +3,7 @@ module RigidBodySimTest
 using Compat
 using Compat.Test
 using Compat.Random
+using Compat.LinearAlgebra
 
 using RigidBodySim
 
@@ -27,7 +28,7 @@ function dynamics_allocations(dynamics::Dynamics, state::MechanismState) # intro
 end
 
 @testset "Dynamics" begin
-    srand(134)
+    Compat.Random.seed!(134)
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     dynamics = Dynamics(mechanism)
     state = MechanismState(mechanism)
@@ -36,7 +37,7 @@ end
 end
 
 @testset "compare to simulate" begin
-    srand(1)
+    Compat.Random.seed!(1)
     urdf = joinpath(@__DIR__, "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
@@ -256,10 +257,10 @@ end
 end
 
 @testset "Stiff integrator" begin
-    urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
+    urdf = joinpath(@__DIR__, "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
-    srand(1)
+    Compat.Random.seed!(1)
     rand!(state)
     x0 = Vector(state)
     final_time = 1.
