@@ -5,12 +5,24 @@ matrix:
     - os: linux
       julia: 0.6
       env: TESTCMD="xvfb-run julia"
-    - os: linux
-      julia: nightly
-      env: TESTCMD="xvfb-run julia"
     - os: osx
       julia: 0.6
       env: TESTCMD="julia"
+    - os: linux
+      julia: 0.7
+      env: TESTCMD="xvfb-run julia"
+    - os: osx
+      julia: 0.7
+      env: TESTCMD="julia"
+    - os: linux
+      julia: 1.0
+      env: TESTCMD="xvfb-run julia"
+    - os: osx
+      julia: 1.0
+      env: TESTCMD="julia"
+    - os: linux
+      julia: nightly
+      env: TESTCMD="xvfb-run julia"
     - os: osx
       julia: nightly
       env: TESTCMD="julia"
@@ -35,11 +47,10 @@ before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ffmpeg; fi
 
 script:
- - $TESTCMD -e 'Pkg.clone(pwd()); Pkg.build("RigidBodySim"); Pkg.test("RigidBodySim"; coverage=true)'
+ - $TESTCMD -e 'if VERSION < v"0.7-"; Pkg.clone(pwd()); else; import Pkg; Pkg.add(Pkg.PackageSpec(path=pwd())); end; Pkg.build("RigidBodySim"); Pkg.test("RigidBodySim"; coverage=true)'
 
 after_success:
   # push coverage results to Codecov
-  - julia -e 'cd(Pkg.dir("RigidBodySim")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+  - julia -e 'if VERSION >= v"0.7-"; import Pkg; end;; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
   # build documentation
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("RigidBodySim")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'if VERSION >= v"0.7-"; import Pkg; end; Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))'
