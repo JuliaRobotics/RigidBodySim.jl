@@ -34,13 +34,7 @@ using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
 import WebIO
-using WebIO: render
-if isdefined(WebIO, :node) # TODO: remove once a new WebIO tag is in
-    using WebIO: node
-else
-    using WebIO: Node
-    const node = Node
-end
+using WebIO: render, node
 using Blink: Window, body!, title
 using CSSUtil: vbox
 using Printf: @sprintf

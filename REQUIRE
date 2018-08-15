@@ -6,7 +6,7 @@ DiffEqCallbacks 1.0.0
 DiffEqDiffTools # TODO: remove (https://github.com/JuliaDiff/ForwardDiff.jl/issues/267)
 ForwardDiff # TODO: remove (https://github.com/JuliaDiff/ForwardDiff.jl/issues/267)
 JSExpr # TODO: remove (https://github.com/JuliaGizmos/JSExpr.jl/pull/14)
-WebIO
+WebIO 0.2.6 # for node function
 CSSUtil
 DataStructures
 DocStringExtensions 0.4.1
