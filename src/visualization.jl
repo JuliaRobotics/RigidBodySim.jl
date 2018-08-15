@@ -265,7 +265,8 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolut
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
     t0, tf = first(sol.t), last(sol.t)
-    ts = Compat.range(t0, stop=tf, step=round(Int, (tf - t0) * max_fps + 1))
+    numframes = min(round(Int, (tf - t0) * max_fps + 1), 2) # need at least two frames to do the interpolation
+    ts = Compat.range(t0, stop=tf, length=numframes)
     qs = let state = vis.state, sol = sol
         map(ts) do t
             x = sol(t)
