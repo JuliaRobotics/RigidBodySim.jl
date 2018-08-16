@@ -18,6 +18,12 @@ using MeshCatMechanisms
 using InteractBase: observe
 using Blink: Window
 
+if VERSION < v"0.7-"
+    const seed! = srand
+else
+    import Random: seed!
+end
+
 function dynamics_allocations(dynamics::Dynamics, state::MechanismState) # introduce function barrier
     x = Vector(state)
     ẋ = similar(x)
@@ -28,7 +34,7 @@ function dynamics_allocations(dynamics::Dynamics, state::MechanismState) # intro
 end
 
 @testset "Dynamics" begin
-    Compat.Random.seed!(134)
+    seed!(134)
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     dynamics = Dynamics(mechanism)
     state = MechanismState(mechanism)
@@ -37,7 +43,7 @@ end
 end
 
 @testset "compare to simulate" begin
-    Compat.Random.seed!(1)
+    seed!(1)
     urdf = joinpath(@__DIR__, "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
@@ -260,7 +266,7 @@ end
     urdf = joinpath(@__DIR__, "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
-    Compat.Random.seed!(1)
+    seed!(1)
     rand!(state)
     x0 = Vector(state)
     final_time = 1.
