@@ -27,6 +27,8 @@ matrix:
       julia: nightly
       env: TESTCMD="julia"
   allow_failures:
+    - julia: 0.7
+    - julia: 1.0
     - julia: nightly
 branches:
   only:
