@@ -53,7 +53,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Installing RigidBodySim",
     "category": "section",
-    "text": "To install the latest tagged release of RigidBodySim, simply runPkg.add(\"RigidBodySim\")To check out the master branch and work on the bleeding edge (generally, not recommended), additionally runPkg.checkout(\"RigidBodySim\")"
+    "text": "To install the latest tagged release of RigidBodySim, simply runimport Pkg\nPkg.add(\"RigidBodySim\")To check out the master branch and work on the bleeding edge (generally, not recommended), additionally runPkg.checkout(\"RigidBodySim\")"
 },
 
 {
