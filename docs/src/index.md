@@ -41,6 +41,7 @@ Download links and more detailed instructions are available on the [Julia](https
 To install the latest tagged release of RigidBodySim, simply run
 
 ```julia
+import Pkg
 Pkg.add("RigidBodySim")
 ```
 

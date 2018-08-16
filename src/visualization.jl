@@ -28,12 +28,14 @@ using DocStringExtensions
     """
 
 using Compat
+using Compat.Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
 using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
-using WebIO: Node, render
+import WebIO
+using WebIO: render, node
 using Blink: Window, body!, title
 using CSSUtil: vbox
 
@@ -106,8 +108,8 @@ SimulationControls() = SimulationControls(button(""), button(""), Observable(HTM
 
 # Icons taken from the freely available set at https://icons8.com/color-icons/
 function render_default(controls::SimulationControls)
-    Node(:div,
-        Node(:style, """
+    node(:div,
+        node(:style, """
             .rigidbodysim-controls button {
                 height: 2.5em;
                 width: 2.5em;
@@ -129,18 +131,18 @@ function render_default(controls::SimulationControls)
             }
             .rigidbodysim-controls > div {flex-grow: 0; ; }
         """),
-        Node(:div,
-            Node(:div,
-                Node(:div,
-                    Node(:div, "Time:"),
+        node(:div,
+            node(:div,
+                node(:div,
+                    node(:div, "Time:"),
                     render(controls.time),
                     style = Dict(:fontSize => "10pt", :fontFamily => "sans-serif",
                                 :userSelect => "none", :cursor => "default",
                                 :height => "2.5em", :width => "8em", :marginLeft => "0.5em", :marginRight => "0.5em", :lineHeight => "2.5em",
                                 :display => "flex", :justifyContent => "space-between")
                 ),
-                Node(:div, controls.pause, attributes = Dict(:class => "rigidbodysim-controls-pause")),
-                Node(:div, controls.terminate, attributes = Dict(:class => "rigidbodysim-controls-terminate")),
+                node(:div, controls.pause, attributes = Dict(:class => "rigidbodysim-controls-pause")),
+                node(:div, controls.terminate, attributes = Dict(:class => "rigidbodysim-controls-terminate")),
                 attributes = Dict(:class => "rigidbodysim-controls"),
                 style = Dict(:display => "flex", :flexWrap => "wrap")
             )
@@ -150,7 +152,7 @@ function render_default(controls::SimulationControls)
 end
 
 function Base.open(controls::SimulationControls, window::Window)
-    size(window, 200, 55)
+    size(window, 300, 55)
     title(window, "RigidBodySim controls")
     body!(window, render_default(controls))
     nothing
@@ -257,7 +259,8 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolut
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
     t0, tf = first(sol.t), last(sol.t)
-    ts = linspace(t0, tf, round(Int, (tf - t0) * max_fps + 1))
+    numframes = min(round(Int, (tf - t0) * max_fps + 1), 2) # need at least two frames to do the interpolation
+    ts = Compat.range(t0, stop=tf, length=numframes)
     qs = let state = vis.state, sol = sol
         map(ts) do t
             x = sol(t)
