@@ -28,6 +28,7 @@ using DocStringExtensions
     """
 
 using Compat
+using Compat.Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
 using MeshCatMechanisms: setanimation!
@@ -37,7 +38,6 @@ import WebIO
 using WebIO: render, node
 using Blink: Window, body!, title
 using CSSUtil: vbox
-using Printf: @sprintf
 
 using DataStructures: top
 
