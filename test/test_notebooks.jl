@@ -1,6 +1,7 @@
 @testset "example notebooks" begin
     notebookdir = joinpath(@__DIR__, "..", "notebooks")
     excludes = String[]
+    push!(excludes, joinpath(notebookdir, "Uncertainty propagation using Measurements.jl.ipynb"))
     for file in readdir(notebookdir)
         path = joinpath(notebookdir, file)
         path in excludes && continue

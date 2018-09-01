@@ -191,7 +191,6 @@ GUI(mechanism::Mechanism, args...) = GUI(MechanismVisualizer(mechanism, args...)
 
 function Base.open(gui::GUI, window::Window)
     title(window, "RigidBodySim")
-    # TODO: vbox(render_default(gui.controls), iframe(gui.visualizer.visualizer.core))
     body!(window, vbox(render_default(gui.controls), gui.visualizer.visualizer.core))
     wait(gui)
     nothing

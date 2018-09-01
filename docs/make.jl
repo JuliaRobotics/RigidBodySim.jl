@@ -1,4 +1,4 @@
-using Compat, RigidBodySim, Documenter
+using RigidBodySim, Documenter
 
 makedocs(
     doctest = true,
