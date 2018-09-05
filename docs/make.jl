@@ -1,4 +1,4 @@
-using RigidBodySim, Documenter
+using RigidBodySim, Documenter, RigidBodyDynamics
 
 makedocs(
     doctest = true,
@@ -20,6 +20,6 @@ deploydocs(
     repo = "github.com/JuliaRobotics/RigidBodySim.jl.git",
     target = "build",
     make = nothing,
-    julia = "0.6",
+    julia = "1.0",
     osname = "linux"
 )
