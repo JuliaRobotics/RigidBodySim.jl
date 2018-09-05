@@ -2,6 +2,13 @@
     notebookdir = joinpath(@__DIR__, "..", "notebooks")
     excludes = String[]
     push!(excludes, joinpath(notebookdir, "Uncertainty propagation using Measurements.jl.ipynb"))
+    printinterval = 60 # seconds
+    printcallback = timer -> Compat.@info "Running notebook tests."
+    timertask = if VERSION < v"0.7-"
+        Timer(printcallback, printinterval, printinterval)
+    else
+        Timer(printcallback, printinterval, interval=printinterval)
+    end
     for file in readdir(notebookdir)
         path = joinpath(notebookdir, file)
         path in excludes && continue
@@ -17,4 +24,5 @@
         end
         end # module
     end
+    close(timertask)
 end
