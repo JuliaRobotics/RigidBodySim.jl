@@ -62,7 +62,7 @@ a digital PD controller running at a fixed rate of 200 Hz.
 ```jldoctest; output = false
 julia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq
 
-julia> mechanism = parse_urdf(Float64, Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf"));
+julia> mechanism = parse_urdf(Float64, joinpath(dirname(pathof(RigidBodySim)), "..", "test", "urdf", "Acrobot.urdf"));
 
 julia> state = MechanismState(mechanism);
 
@@ -72,7 +72,7 @@ julia> controlcalls = Ref(0);
 
 julia> pdcontrol!(τ, t, state) = (controlcalls[] += 1; τ .= -20 .* velocity(state) .- 100 .* configuration(state));
 
-julia> τ = zeros(velocity(state)); Δt = 1 / 200
+julia> τ = zero(velocity(state)); Δt = 1 / 200
 0.005
 
 julia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));

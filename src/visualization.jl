@@ -236,7 +236,7 @@ Visualizing the result of a simulation of the passive dynamics of an Acrobot (do
 
 ```jldoctest; output = false
 using RigidBodySim, RigidBodyDynamics, MeshCatMechanisms, Blink
-urdf = Pkg.dir("RigidBodySim", "test", "urdf", "Acrobot.urdf")
+urdf = joinpath(dirname(pathof(RigidBodySim)), "..", "test", "urdf", "Acrobot.urdf")
 mechanism = parse_urdf(Float64, urdf)
 state = MechanismState(mechanism)
 set_configuration!(state, [0.1; 0.2])
