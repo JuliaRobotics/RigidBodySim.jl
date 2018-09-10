@@ -1,7 +1,6 @@
 @testset "example notebooks" begin
     notebookdir = joinpath(@__DIR__, "..", "notebooks")
     excludes = String[]
-    push!(excludes, joinpath(notebookdir, "Uncertainty propagation using Measurements.jl.ipynb"))
     printinterval = 60 # seconds
     printcallback = timer -> Compat.@info "Running notebook tests."
     timertask = if VERSION < v"0.7-"
