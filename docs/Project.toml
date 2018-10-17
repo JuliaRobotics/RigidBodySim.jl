@@ -2,3 +2,6 @@
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 RigidBodyDynamics = "366cf18f-59d5-5db9-a4de-86a9f6786172"
+
+[compat]
+Documenter = "~0.19"
