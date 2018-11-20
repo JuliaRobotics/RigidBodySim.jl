@@ -25,10 +25,14 @@ RigidBodySim uses [MeshCatMechanisms.jl](https://github.com/JuliaRobotics/MeshCa
 ```@docs
 GUI
 SimulationControls
+DiffEqBase.CallbackSet(::MeshCatMechanisms.MechanismVisualizer)
+DiffEqBase.CallbackSet(::RigidBodySim.GUI)
+MeshCatMechanisms.setanimation!(::MeshCatMechanisms.MechanismVisualizer, ::DiffEqBase.ODESolution)
 ```
 
 ## Utilities
 
 ```@docs
 configuration_renormalizer
+RealtimeRateLimiter(; kwargs...)
 ```

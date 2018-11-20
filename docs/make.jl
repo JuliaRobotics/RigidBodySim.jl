@@ -1,25 +1,28 @@
-using RigidBodySim, Documenter, RigidBodyDynamics
+# Workaround for JuliaLang/julia/pull/28625
+if Base.HOME_PROJECT[] !== nothing
+    Base.HOME_PROJECT[] = abspath(Base.HOME_PROJECT[])
+end
+
+using RigidBodySim, Documenter, RigidBodySim.Core.RigidBodyDynamics
+import RigidBodySim.Core.DiffEqBase, RigidBodySim.Visualization.MeshCatMechanisms
 
 makedocs(
     doctest = true,
     modules = [RigidBodySim],
     checkdocs = :none, # because of the reexported functionality
-    format = :html,
-    sitename ="RigidBodySim.jl",
     linkcheck = true,
+    format = :html,
+    root = @__DIR__,
+    sitename ="RigidBodySim.jl",
     authors = "Twan Koolen and contributors.",
     pages = [
         "Home" => "index.md",
         "Quick start guide" => "quickstart.md",
         "Details" => "details.md"
-    ]
+    ],
+    html_prettyurls = parse(Bool, get(ENV, "CI", "false")),
 )
 
 deploydocs(
-    deps = nothing,
-    repo = "github.com/JuliaRobotics/RigidBodySim.jl.git",
-    target = "build",
-    make = nothing,
-    julia = "1.0",
-    osname = "linux"
+    repo = "github.com/JuliaRobotics/RigidBodySim.jl.git"
 )
