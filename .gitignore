@@ -6,5 +6,4 @@ deps/build.log
 *.ipynb_checkpoints
 docs/build/
 docs/site/
-docs/Manifest.toml
 
