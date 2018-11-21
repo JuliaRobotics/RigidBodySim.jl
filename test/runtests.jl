@@ -134,7 +134,7 @@ end
     gui = GUI(mechanism, MeshCatMechanisms.Skeleton(randomize_colors = true, inertias = true))
     vis = gui.visualizer
     controls = gui.controls
-    if !(haskey(ENV, "CI") && Sys.KERNEL == :Linux)
+    if !haskey(ENV, "CI")
         open(vis, Window())
         open(controls, Window())
         open(gui)
@@ -214,7 +214,7 @@ end
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     state = MechanismState(mechanism)
     vis = MechanismVisualizer(mechanism, MeshCatMechanisms.Skeleton(randomize_colors = true, inertias = true))
-    if !(haskey(ENV, "CI") && Sys.KERNEL == :Linux)
+    if !haskey(ENV, "CI")
         open(vis, Window())
         wait(vis)
     end
