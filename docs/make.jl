@@ -3,8 +3,8 @@ if Base.HOME_PROJECT[] !== nothing
     Base.HOME_PROJECT[] = abspath(Base.HOME_PROJECT[])
 end
 
-using RigidBodySim, Documenter, RigidBodySim.Core.RigidBodyDynamics
-import RigidBodySim.Core.DiffEqBase, RigidBodySim.Visualization.MeshCatMechanisms
+using RigidBodySim, Documenter, RigidBodyDynamics
+import DiffEqBase, MeshCatMechanisms
 
 makedocs(
     doctest = true,
