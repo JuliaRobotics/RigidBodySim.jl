@@ -2,12 +2,8 @@
     notebookdir = joinpath(@__DIR__, "..", "notebooks")
     excludes = String[]
     printinterval = 60 # seconds
-    printcallback = timer -> Compat.@info "Running notebook tests."
-    timertask = if VERSION < v"0.7-"
-        Timer(printcallback, printinterval, printinterval)
-    else
-        Timer(printcallback, printinterval, interval=printinterval)
-    end
+    printcallback = timer -> @info "Running notebook tests."
+    timertask = Timer(printcallback, printinterval, interval=printinterval)
     for file in readdir(notebookdir)
         path = joinpath(notebookdir, file)
         path in excludes && continue
@@ -15,8 +11,7 @@
         lowercase(ext) == ".ipynb" || continue
 
         @eval module $(gensym()) # Each notebook is run in its own module.
-        using Compat
-        using Compat.Test
+        using Test
         using NBInclude
         @testset "$($name)" begin
             @nbinclude($path; regex = r"^((?!\#NBSKIP).)*$"s) # Use #NBSKIP in a cell to skip it during tests.

@@ -1,9 +1,8 @@
 module RigidBodySimTest
 
-using Compat
-using Compat.Test
-using Compat.Random
-using Compat.LinearAlgebra
+using Test
+using Random
+using LinearAlgebra
 
 using RigidBodySim
 
@@ -18,12 +17,6 @@ using MeshCatMechanisms
 using InteractBase: observe
 using Blink: Window
 
-if VERSION < v"0.7-"
-    const seed! = srand
-else
-    import Random: seed!
-end
-
 function dynamics_allocations(dynamics::Dynamics, state::MechanismState) # introduce function barrier
     x = Vector(state)
     ẋ = similar(x)
@@ -34,7 +27,7 @@ function dynamics_allocations(dynamics::Dynamics, state::MechanismState) # intro
 end
 
 @testset "Dynamics" begin
-    seed!(134)
+    Random.seed!(134)
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     dynamics = Dynamics(mechanism)
     state = MechanismState(mechanism)
@@ -43,7 +36,7 @@ end
 end
 
 @testset "compare to simulate" begin
-    seed!(1)
+    Random.seed!(1)
     urdf = joinpath(@__DIR__, "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
@@ -52,7 +45,7 @@ end
     final_time = 5.
     problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
-    Compat.copyto!(state, x0)
+    copyto!(state, x0)
     ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
     @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
 end
@@ -68,7 +61,7 @@ end
     problem = ODEProblem(Dynamics(mechanism), state, (0., 1e-3))
     sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
 
-    Compat.copyto!(state, sol[end])
+    copyto!(state, sol[end])
     @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 end
 
@@ -270,7 +263,7 @@ end
     urdf = joinpath(@__DIR__, "urdf", "Acrobot.urdf")
     mechanism = parse_urdf(Float64, urdf)
     state = MechanismState(mechanism)
-    seed!(1)
+    Random.seed!(1)
     rand!(state)
     x0 = Vector(state)
     final_time = 1.
