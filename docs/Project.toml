@@ -5,4 +5,3 @@ MeshCatMechanisms = "6ad125db-dd91-5488-b820-c1df6aab299d"
 OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
 RigidBodyDynamics = "366cf18f-59d5-5db9-a4de-86a9f6786172"
 RigidBodySim = "e61f16d8-a6b7-5689-8d03-627c2b27ebce"
-

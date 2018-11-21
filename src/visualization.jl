@@ -243,7 +243,7 @@ set_configuration!(state, [0.1; 0.2])
 problem = ODEProblem(Dynamics(mechanism), state, (0., 2.))
 sol = solve(problem, Vern7())
 vis = MechanismVisualizer(mechanism, URDFVisuals(urdf))
-open(vis, Window())
+# open(vis, Window()) # uncomment to open the visualizer window
 setanimation!(vis, sol; realtime_rate = 0.5);
 
 # output
@@ -273,63 +273,5 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolut
     # the times
     setanimation!(vis, ts / realtime_rate, qs)
 end
-
-"""
-Contains the interface that should be implemented by specific viewer types.
-"""
-module VisualizerInterface
-
-struct SimulationCommands
-    terminate::Bool
-    pause::Bool
-end
-
-function SimulationCommands(vis)
-    error("""
-SimulationCommands() is discontinued. You can construct a set of controls,
-open them in a new window, and create a callback from them by doing:
-
-```
-using Blink: Window
-
-controls = SimulationControls()
-open(controls, Window())
-callback = CallbackSet(controls)
-```
-""")
-end
-
-
-function visualize(args...)
-    error("""
-visualize() is discontinued. You can render a state in a MeshCatMechanisms
-visualizer with:
-
-```
-set_configuration!(vis, configuration(state))
-```
-""")
-end
-
-function window(args...; kw...)
-    error("""
-window() is discontinued. You can open a MeshCatMechanisms visualizer
-in a new standalone window with:
-
-```
-using Blink: Window
-open(vis, Window())
-```
-""")
-end
-
-function isinteractive(args...)
-    error("""
-isinteractive() is discontinued. Interactive controls are now separate
-from the visualizer. See SimulationControls.
-""")
-end
-
-end # module
 
 end # module
