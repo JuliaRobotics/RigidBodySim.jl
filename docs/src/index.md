@@ -30,7 +30,7 @@ Performance is fairly good. For example, we have used RigidBodySim to perform a 
 
 ### Installing Julia
 
-Download links and more detailed instructions are available on the [Julia](https://julialang.org/) website. The latest release of RigidBodySim.jl requires version 0.6 of Julia (the latest stable version).
+Download links and more detailed instructions are available on the [Julia](https://julialang.org/) website. The latest release of RigidBodySim.jl requires at least version 0.7 of Julia.
 
 !!! warning
 

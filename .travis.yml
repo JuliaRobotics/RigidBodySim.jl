@@ -1,39 +1,28 @@
-## Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
+os:
+  - linux
+  - osx
+julia:
+  - 0.7
+  - 1.0
+  - nightly
 matrix:
-  include:
-    - os: linux
-      julia: 0.6
-      env: TESTCMD="xvfb-run julia"
-    - os: osx
-      julia: 0.6
-      env: TESTCMD="julia"
-    - os: linux
-      julia: 1.0
-      env: TESTCMD="xvfb-run julia"
-    - os: osx
-      julia: 1.0
-      env: TESTCMD="julia"
-    - os: linux
-      julia: nightly
-      env: TESTCMD="xvfb-run julia"
-    - os: osx
-      julia: nightly
-      env: TESTCMD="julia"
   allow_failures:
-    - julia: nightly
+  - julia: nightly
 branches:
   only:
     - master
     - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
 notifications:
   email: false
-git:
-  depth: 99999999
-script:
- - $TESTCMD -e 'if VERSION < v"0.7-"; Pkg.clone(pwd()); else; import Pkg; Pkg.add(Pkg.PackageSpec(path=pwd())); end; Pkg.build("RigidBodySim"); Pkg.test("RigidBodySim"; coverage=true)'
 after_success:
-  # push coverage results to Codecov
-  - julia -e 'if VERSION >= v"0.7-"; using Pkg; else; cd(Pkg.dir("RigidBodySim")); end; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  # build documentation
-  - julia -e 'using Pkg; Pkg.activate("docs"); Pkg.instantiate(); Pkg.add(Pkg.PackageSpec(path=pwd())); include("docs/make.jl")'
+  - julia --project -e 'using Pkg; pkg"add Coverage@0.6.0"; using Coverage; Codecov.submit(Codecov.process_folder())'
+jobs:
+  include:
+    - stage: Documentation
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs -e 'using Pkg; Pkg.instantiate()'
+        - julia --project=docs --color=yes docs/make.jl
+  after_success: skip

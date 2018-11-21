@@ -34,6 +34,6 @@ macro reexport(ex)
 
     Expr(:toplevel,
         ex,
-        [:(eval(Expr(:export, setdiff(names($mod), [Compat.nameof($mod)])...))) for mod in modules]...
+        [:(eval(Expr(:export, setdiff(names($mod), [nameof($mod)])...))) for mod in modules]...
     ) |> esc
 end

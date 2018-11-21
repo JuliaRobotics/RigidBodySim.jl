@@ -20,7 +20,6 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-using Compat
 using DiffEqBase:
     ODEProblem, DiscreteCallback, u_modified!, CallbackSet
 using DiffEqCallbacks:
@@ -77,11 +76,11 @@ function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t::T
     Tau = promote_type(T, C)
     τ = dynamics.τcache[Tau]
     result = dynamics.resultcache[Tau]
-    Compat.copyto!(state, x)
+    copyto!(state, x)
     dynamics.setparams!(state, p)
     dynamics.control!(τ, t, state)
     dynamics!(result, state, τ)
-    Compat.copyto!(ẋ, result)
+    copyto!(ẋ, result)
     ẋ
 end
 
@@ -135,7 +134,7 @@ function configuration_renormalizer(state::MechanismState, condition = (u, t, in
             q = view(integrator.u, 1 : num_positions(state)) # TODO: allocates
             set_configuration!(state, q)
             normalize_configuration!(state)
-            Compat.copyto!(q, configuration(state))
+            copyto!(q, configuration(state))
             u_modified!(integrator, true)
         end
     end

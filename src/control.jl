@@ -16,7 +16,6 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-using Compat
 using DiffEqBase: ODEProblem, CallbackSet, u_modified!
 using DiffEqCallbacks: PeriodicCallback
 using RigidBodyDynamics: MechanismState
@@ -144,7 +143,7 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
         controller.docontrol[] = false
         controller.last_control_time[] = t
     end
-    Compat.copyto!(τ, controller.τ)
+    copyto!(τ, controller.τ)
     if t > controller.last_control_time[] + controller.Δt || t < controller.last_control_time[]
         throw(PeriodicControlFailure(controller.Δt, t, controller.last_control_time[]))
     end
