@@ -27,13 +27,14 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
+import MeshCatMechanisms
+
 using Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
 using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
-import WebIO
 using WebIO: render, node
 using Blink: Window, body!, title
 using CSSUtil: vbox
@@ -199,7 +200,7 @@ Base.open(gui::GUI) = open(gui, Window())
 Base.wait(gui::GUI) = wait(gui.visualizer)
 
 """
-Create the DifferentialEquations.jl callbacks associated with the [GUI](@ref).
+Create the DifferentialEquations.jl callbacks associated with the [`GUI`](@ref).
 
 `max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
 """

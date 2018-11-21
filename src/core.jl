@@ -20,6 +20,9 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
+import DiffEqBase
+import RigidBodyDynamics
+
 using DiffEqBase:
     ODEProblem, DiscreteCallback, u_modified!, CallbackSet
 using DiffEqCallbacks:
