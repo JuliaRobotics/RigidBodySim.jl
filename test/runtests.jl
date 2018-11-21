@@ -141,9 +141,11 @@ end
     gui = GUI(mechanism, MeshCatMechanisms.Skeleton(randomize_colors = true, inertias = true))
     vis = gui.visualizer
     controls = gui.controls
-    open(vis, Window())
-    open(controls, Window())
-    open(gui)
+    if !(haskey(ENV, "CI") && Sys.KERNEL == :Linux)
+        open(vis, Window())
+        open(controls, Window())
+        open(gui)
+    end
     dt = 1e-4
 
     set_configuration!(vis, configuration(state))
@@ -219,8 +221,10 @@ end
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     state = MechanismState(mechanism)
     vis = MechanismVisualizer(mechanism, MeshCatMechanisms.Skeleton(randomize_colors = true, inertias = true))
-    open(vis, Window())
-    wait(vis)
+    if !(haskey(ENV, "CI") && Sys.KERNEL == :Linux)
+        open(vis, Window())
+        wait(vis)
+    end
 
     final_time = 5.
     problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
