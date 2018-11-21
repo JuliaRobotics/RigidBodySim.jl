@@ -1,7 +1,7 @@
 var documenterSearchIndex = {"docs": [
 
 {
-    "location": "index.html#",
+    "location": "#",
     "page": "Home",
     "title": "Home",
     "category": "page",
@@ -9,7 +9,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#RigidBodySim-1",
+    "location": "#RigidBodySim-1",
     "page": "Home",
     "title": "RigidBodySim",
     "category": "section",
@@ -17,7 +17,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Functionality-1",
+    "location": "#Functionality-1",
     "page": "Home",
     "title": "Functionality",
     "category": "section",
@@ -25,7 +25,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Performance-1",
+    "location": "#Performance-1",
     "page": "Home",
     "title": "Performance",
     "category": "section",
@@ -33,7 +33,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Installation-1",
+    "location": "#Installation-1",
     "page": "Home",
     "title": "Installation",
     "category": "section",
@@ -41,15 +41,15 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Installing-Julia-1",
+    "location": "#Installing-Julia-1",
     "page": "Home",
     "title": "Installing Julia",
     "category": "section",
-    "text": "Download links and more detailed instructions are available on the Julia website. The latest release of RigidBodySim.jl requires version 0.6 of Julia (the latest stable version).warning: Warning\nDo not use apt-get or brew to install Julia, as the versions provided by these package managers tend to be out of date."
+    "text": "Download links and more detailed instructions are available on the Julia website. The latest release of RigidBodySim.jl requires at least version 0.7 of Julia.warning: Warning\nDo not use apt-get or brew to install Julia, as the versions provided by these package managers tend to be out of date."
 },
 
 {
-    "location": "index.html#Installing-RigidBodySim-1",
+    "location": "#Installing-RigidBodySim-1",
     "page": "Home",
     "title": "Installing RigidBodySim",
     "category": "section",
@@ -57,7 +57,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#First-steps-1",
+    "location": "#First-steps-1",
     "page": "Home",
     "title": "First steps",
     "category": "section",
@@ -65,7 +65,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Contents-1",
+    "location": "#Contents-1",
     "page": "Home",
     "title": "Contents",
     "category": "section",
@@ -73,7 +73,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "index.html#Citing-this-library-1",
+    "location": "#Citing-this-library-1",
     "page": "Home",
     "title": "Citing this library",
     "category": "section",
@@ -81,7 +81,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "quickstart.html#",
+    "location": "quickstart/#",
     "page": "Quick start guide",
     "title": "Quick start guide",
     "category": "page",
@@ -89,7 +89,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "quickstart.html#quickstart-1",
+    "location": "quickstart/#quickstart-1",
     "page": "Quick start guide",
     "title": "Quick start guide",
     "category": "section",
@@ -97,7 +97,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#",
+    "location": "details/#",
     "page": "Details",
     "title": "Details",
     "category": "page",
@@ -105,7 +105,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#Details-1",
+    "location": "details/#Details-1",
     "page": "Details",
     "title": "Details",
     "category": "section",
@@ -113,7 +113,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#RigidBodySim.Core.Dynamics",
+    "location": "details/#RigidBodySim.Core.Dynamics",
     "page": "Details",
     "title": "RigidBodySim.Core.Dynamics",
     "category": "type",
@@ -121,7 +121,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#DiffEqBase.ODEProblem-Tuple{Dynamics,Union{AbstractArray{T,1} where T, MechanismState},Any}",
+    "location": "details/#DiffEqBase.ODEProblem-Tuple{Dynamics,Union{AbstractArray{T,1} where T, MechanismState},Any}",
     "page": "Details",
     "title": "DiffEqBase.ODEProblem",
     "category": "method",
@@ -129,7 +129,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#ODE-problem-creation-1",
+    "location": "details/#ODE-problem-creation-1",
     "page": "Details",
     "title": "ODE problem creation",
     "category": "section",
@@ -137,7 +137,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#RigidBodySim.Core.zero_control!",
+    "location": "details/#RigidBodySim.Core.zero_control!",
     "page": "Details",
     "title": "RigidBodySim.Core.zero_control!",
     "category": "function",
@@ -145,7 +145,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#RigidBodySim.Core.controlcallback",
+    "location": "details/#RigidBodySim.Core.controlcallback",
     "page": "Details",
     "title": "RigidBodySim.Core.controlcallback",
     "category": "function",
@@ -153,15 +153,15 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#RigidBodySim.Control.PeriodicController",
+    "location": "details/#RigidBodySim.Control.PeriodicController",
     "page": "Details",
     "title": "RigidBodySim.Control.PeriodicController",
     "category": "type",
-    "text": "struct PeriodicController{Tau<:(AbstractArray{T,1} where T), T<:Number, C, I}\n\nA PeriodicController can be used to simulate a digital controller that runs at a fixed rate (in terms of simulation time). It does so by performing a zero-order hold on a provided control function.\n\nPeriodicControllers can be constructed using\n\nPeriodicController(τ, Δt, control!; initialize = DiffEqBase.INITIALIZE_DEFAULT, save_positions = (false, false))\n\nwhere control! is a controller satisfying the standard RigidBodySim controller signature (control!(τ, Δt, state)), Δt is the simulation time interval between calls to the control! function, and τ is used to call control!. The initialize and save_positions keyword arguments are documented in the DiscreteCallback section of the DifferentialEquations documentation.\n\nPeriodicControllers are callable objects, and themselves fit the standard RigidBodySim controller signature.\n\nA DiffEqCallbacks.PeriodicCallback can be created from a PeriodicController, and is used to stop ODE integration exactly every Δt seconds, so that the control! function can be called. Typically, users will not have to explicitly create this PeriodicCallback, as it is automatically created and added to the ODEProblem when the PeriodicController is passed into the RigidBodySim-provided DiffEqBase.ODEProblem constructor overload.\n\nExamples\n\nIn the following example, a PeriodicController is used to simulate a digital PD controller running at a fixed rate of 200 Hz.\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq\n\njulia> mechanism = parse_urdf(Float64, joinpath(dirname(pathof(RigidBodySim)), \"..\", \"test\", \"urdf\", \"Acrobot.urdf\"));\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> controlcalls = Ref(0);\n\njulia> pdcontrol!(τ, t, state) = (controlcalls[] += 1; τ .= -20 .* velocity(state) .- 100 .* configuration(state));\n\njulia> τ = zero(velocity(state)); Δt = 1 / 200\n0.005\n\njulia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));\n\njulia> sol = solve(problem, Tsit5());\n\njulia> @assert all(x -> isapprox(x, 0, atol = 1e-4), sol.u[end]) # ensure state converges to zero\n\njulia> controlcalls[]\n1001\n\n\n\n\n\n"
+    "text": "struct PeriodicController{Tau<:(AbstractArray{T,1} where T), T<:Number, C, I}\n\nA PeriodicController can be used to simulate a digital controller that runs at a fixed rate (in terms of simulation time). It does so by performing a zero-order hold on a provided control function.\n\nPeriodicControllers can be constructed using\n\nPeriodicController(τ, Δt, control!; initialize = DiffEqBase.INITIALIZE_DEFAULT, save_positions = (false, false))\n\nwhere control! is a controller satisfying the standard RigidBodySim controller signature (control!(τ, Δt, state)), Δt is the simulation time interval between calls to the control! function, and τ is used to call control!. The initialize and save_positions keyword arguments are documented in the DiscreteCallback section of the DifferentialEquations documentation.\n\nPeriodicControllers are callable objects, and themselves fit the standard RigidBodySim controller signature.\n\nA DiffEqCallbacks.PeriodicCallback can be created from a PeriodicController, and is used to stop ODE integration exactly every Δt seconds, so that the control! function can be called. Typically, users will not have to explicitly create this PeriodicCallback, as it is automatically created and added to the ODEProblem when the PeriodicController is passed into the RigidBodySim-provided DiffEqBase.ODEProblem constructor overload.\n\nExamples\n\nIn the following example, a PeriodicController is used to simulate a digital PD controller running at a fixed rate of 200 Hz.\n\njulia> using RigidBodySim, RigidBodyDynamics, OrdinaryDiffEq\n\njulia> mechanism = parse_urdf(Float64, Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\"));\n\njulia> state = MechanismState(mechanism);\n\njulia> set_configuration!(state, [0.1; 0.2]);\n\njulia> controlcalls = Ref(0);\n\njulia> pdcontrol!(τ, t, state) = (controlcalls[] += 1; τ .= -20 .* velocity(state) .- 100 .* configuration(state));\n\njulia> τ = zeros(velocity(state)); Δt = 1 / 200\n0.005\n\njulia> problem = ODEProblem(Dynamics(mechanism, PeriodicController(τ, Δt, pdcontrol!)), state, (0., 5.));\n\njulia> sol = solve(problem, Tsit5());\n\njulia> @assert all(x -> isapprox(x, 0, atol = 1e-4), sol.u[end]) # ensure state converges to zero\n\njulia> controlcalls[]\n1001\n\n\n\n\n\n"
 },
 
 {
-    "location": "details.html#control-1",
+    "location": "details/#control-1",
     "page": "Details",
     "title": "Control",
     "category": "section",
@@ -169,7 +169,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#RigidBodySim.Visualization.GUI",
+    "location": "details/#RigidBodySim.Visualization.GUI",
     "page": "Details",
     "title": "RigidBodySim.Visualization.GUI",
     "category": "type",
@@ -177,7 +177,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#RigidBodySim.Visualization.SimulationControls",
+    "location": "details/#RigidBodySim.Visualization.SimulationControls",
     "page": "Details",
     "title": "RigidBodySim.Visualization.SimulationControls",
     "category": "type",
@@ -185,15 +185,39 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#Visualization-1",
+    "location": "details/#DiffEqBase.CallbackSet-Tuple{MeshCatMechanisms.MechanismVisualizer}",
     "page": "Details",
-    "title": "Visualization",
-    "category": "section",
-    "text": "RigidBodySim uses MeshCatMechanisms.jl for 3D visualization.GUI\nSimulationControls"
+    "title": "DiffEqBase.CallbackSet",
+    "category": "method",
+    "text": "CallbackSet(vis; max_fps)\n\n\nCreate the DifferentialEquations.jl callbacks needed for publishing to a visualizer during simulation.\n\nmax_fps is the maximum number of frames per second (in terms of wall time) to draw. Default: 60.0.\n\n\n\n\n\n"
 },
 
 {
-    "location": "details.html#RigidBodySim.Core.configuration_renormalizer",
+    "location": "details/#DiffEqBase.CallbackSet-Tuple{GUI}",
+    "page": "Details",
+    "title": "DiffEqBase.CallbackSet",
+    "category": "method",
+    "text": "CallbackSet(gui; max_fps)\n\n\nCreate the DifferentialEquations.jl callbacks associated with the GUI.\n\nmax_fps is the maximum number of frames per second (in terms of wall time) to draw. Default: 60.0.\n\n\n\n\n\n"
+},
+
+{
+    "location": "details/#MeshCat.setanimation!-Tuple{MeshCatMechanisms.MechanismVisualizer,DiffEqBase.ODESolution}",
+    "page": "Details",
+    "title": "MeshCat.setanimation!",
+    "category": "method",
+    "text": "setanimation!(vis, sol; max_fps, realtime_rate, pause_pollint)\n\n\nPlay back a visualization of a RigidBodySim.jl simulation.\n\nPositional arguments:\n\nvis is a MeshCatMechanisms.MechanismVisualizer\nsol is a DiffEqBase.ODESolution obtained from a RigidBodySim.jl simulation.\n\nsetanimation accepts the following keyword arguments:\n\nmax_fps: the maximum number of frames per second to draw. Default: 60.0.\nrealtime_rate: can be used to slow down or speed up playback compared to wall time. A realtime_rate of 2 will result in playback that is sped up 2x. Default: 1.0.\n\nExamples\n\nVisualizing the result of a simulation of the passive dynamics of an Acrobot (double pendulum) at half speed:\n\nusing RigidBodySim, RigidBodyDynamics, MeshCatMechanisms, Blink\nurdf = Pkg.dir(\"RigidBodySim\", \"test\", \"urdf\", \"Acrobot.urdf\")\nmechanism = parse_urdf(Float64, urdf)\nstate = MechanismState(mechanism)\nset_configuration!(state, [0.1; 0.2])\nproblem = ODEProblem(Dynamics(mechanism), state, (0., 2.))\nsol = solve(problem, Vern7())\nvis = MechanismVisualizer(mechanism, URDFVisuals(urdf))\nopen(vis, Window())\nsetanimation!(vis, sol; realtime_rate = 0.5);\n\n\n\n\n\n"
+},
+
+{
+    "location": "details/#Visualization-1",
+    "page": "Details",
+    "title": "Visualization",
+    "category": "section",
+    "text": "RigidBodySim uses MeshCatMechanisms.jl for 3D visualization.GUI\nSimulationControls\nDiffEqBase.CallbackSet(::MeshCatMechanisms.MechanismVisualizer)\nDiffEqBase.CallbackSet(::RigidBodySim.GUI)\nMeshCatMechanisms.setanimation!(::MeshCatMechanisms.MechanismVisualizer, ::DiffEqBase.ODESolution)"
+},
+
+{
+    "location": "details/#RigidBodySim.Core.configuration_renormalizer",
     "page": "Details",
     "title": "RigidBodySim.Core.configuration_renormalizer",
     "category": "function",
@@ -201,11 +225,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "details.html#Utilities-1",
+    "location": "details/#RigidBodySim.Core.RealtimeRateLimiter-Tuple{}",
+    "page": "Details",
+    "title": "RigidBodySim.Core.RealtimeRateLimiter",
+    "category": "method",
+    "text": "RealtimeRateLimiter(; max_rate, poll_interval, save_positions, reset_interval)\n\n\nRealtimeRateLimiter(; max_rate = 1., poll_interval = 1 / 30; save_positions = (false, false))\n\nA DiscreteCallback that limits the rate of integration so that integration time t increases at a rate no higher than max_rate compared to wall time.\n\nA RealtimeRateLimiter can be used, for example, if you want to simulate a physical system including its timing characteristics. Specific use cases may include realtime animation and user interaction during the simulation.\n\nThe poll_interval keyword argument can be used to control how often the integration is stopped to check whether to sleep (and for how long). Specifically, this operation happens every poll_interval / max_rate in terms of integration time, which corresponds to approximately every poll_interval seconds wall time if max_rate is actually achieved.\n\n\n\n\n\n"
+},
+
+{
+    "location": "details/#Utilities-1",
     "page": "Details",
     "title": "Utilities",
     "category": "section",
-    "text": "configuration_renormalizer"
+    "text": "configuration_renormalizer\nRealtimeRateLimiter(; kwargs...)"
 },
 
 ]}
