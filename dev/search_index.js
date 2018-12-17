@@ -161,11 +161,19 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "details/#RigidBodySim.Control.SumController",
+    "page": "Details",
+    "title": "RigidBodySim.Control.SumController",
+    "category": "type",
+    "text": "struct SumController{Tau<:(AbstractArray{T,1} where T), C<:Tuple}\n\nA SumController can be used to combine multiple controllers, summing the control torques that each of these controllers produces.\n\nExamples\n\njulia> using RigidBodySim, RigidBodyDynamics\n\njulia> mechanism = parse_urdf(Float64, joinpath(dirname(pathof(RigidBodySim)), \"..\", \"test\", \"urdf\", \"Acrobot.urdf\"));\n\njulia> state = MechanismState(mechanism);\n\njulia> c1 = (τ, t, state) -> τ .= t;\n\njulia> c2 = (τ, t, state) -> τ .= 2 * t;\n\njulia> sumcontroller = SumController(similar(velocity(state)), (c1, c2))\n\njulia> τ = similar(velocity(state))\n\njulia> controller(τ, 1.0, state);\n\njulia> @assert all(τ .== 3.0);\n\n\n\n\n\n"
+},
+
+{
     "location": "details/#control-1",
     "page": "Details",
     "title": "Control",
     "category": "section",
-    "text": "zero_control!\ncontrolcallback\nPeriodicController"
+    "text": "zero_control!\ncontrolcallback\nPeriodicController\nSumController"
 },
 
 {
