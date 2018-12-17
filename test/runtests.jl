@@ -128,6 +128,23 @@ end
     @test sol60.u == sol.u
 end
 
+@testset "SumController" begin
+    mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
+    state = MechanismState(mechanism)
+    c1 = (τ, t, state) -> τ .= t
+    c2 = (τ, t, state) -> τ .= 2 * t
+    RigidBodySim.controlcallback(::typeof(c1)) = PeriodicCallback(() -> (), 1.0)
+    RigidBodySim.controlcallback(::typeof(c2)) = PeriodicCallback(() -> (), 1.0)
+    sumcontroller = SumController(similar(velocity(state)), (c1, c2))
+    let τ = similar(velocity(state)), t = 1.0, state = state
+        sumcontroller(τ, t, state)
+        @test all(τ .== 3 * t)
+        allocs = @allocated sumcontroller(τ, t, state)
+        @test allocs == 0
+    end
+    @test length(controlcallback(sumcontroller).discrete_callbacks) == 2
+end
+
 @testset "visualizer callbacks" begin
     mechanism = rand_tree_mechanism(Float64, [Revolute{Float64} for i = 1 : 30]...)
     state = MechanismState(mechanism)
