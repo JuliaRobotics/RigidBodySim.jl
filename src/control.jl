@@ -1,7 +1,8 @@
 module Control
 
 export
-    PeriodicController
+    PeriodicController,
+    SumController
 
 using DocStringExtensions
 @template (FUNCTIONS, METHODS, MACROS) =
@@ -149,5 +150,52 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
     end
     τ
 end
+
+"""
+A `SumController` can be used to combine multiple controllers, summing the control
+torques that each of these controllers produces.
+
+# Examples
+
+```jldoctest; output = false
+julia> using RigidBodySim, RigidBodyDynamics
+
+julia> mechanism = parse_urdf(Float64, joinpath(dirname(pathof(RigidBodySim)), "..", "test", "urdf", "Acrobot.urdf"));
+
+julia> state = MechanismState(mechanism);
+
+julia> c1 = (τ, t, state) -> τ .= t;
+
+julia> c2 = (τ, t, state) -> τ .= 2 * t;
+
+julia> sumcontroller = SumController(similar(velocity(state)), (c1, c2))
+
+julia> τ = similar(velocity(state))
+
+julia> controller(τ, 1.0, state);
+
+julia> @assert all(τ .== 3.0);
+```
+"""
+struct SumController{Tau<:AbstractVector, C<:Tuple}
+    τbuffer::Tau
+    controllers::C
+end
+
+@inline _add_controller_contributions(τ, τbuffer, t, state, controllers::Tuple{}) = nothing
+@inline function _add_controller_contributions(τ, τbuffer, t, state, controllers::Tuple)
+    controllers[1](τbuffer, t, state)
+    τ .+= τbuffer
+    _add_controller_contributions(τ, τbuffer, t, state, Base.tail(controllers))
+    nothing
+end
+
+function (controller::SumController)(τ::AbstractVector, t::Number, state::MechanismState)
+    τ .= 0
+    _add_controller_contributions(τ, controller.τbuffer, t, state, controller.controllers)
+    τ
+end
+
+controlcallback(controller::SumController) = CallbackSet(map(controlcallback, controller.controllers)...)
 
 end # module

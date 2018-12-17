@@ -16,6 +16,7 @@ ODEProblem(::RigidBodySim.Dynamics, ::Union{Base.AbstractVector, RigidBodyDynami
 zero_control!
 controlcallback
 PeriodicController
+SumController
 ```
 
 ## Visualization
