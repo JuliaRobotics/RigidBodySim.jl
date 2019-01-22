@@ -28,6 +28,7 @@ using DocStringExtensions
     """
 
 import MeshCatMechanisms
+import WebIO
 
 using Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
@@ -35,7 +36,7 @@ using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, co
 using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
-using WebIO: render, node
+using WebIO: render, node, Node
 using Blink: Window, body!, title
 using CSSUtil: vbox
 
@@ -107,7 +108,7 @@ The controls can be displayed in a standalone window using `open(controls, Blink
 SimulationControls() = SimulationControls(button(""), button(""), Observable(HTML("0.0")))
 
 # Icons taken from the freely available set at https://icons8.com/color-icons/
-function render_default(controls::SimulationControls)
+function WebIO.render(controls::SimulationControls)
     node(:div,
         node(:style, """
             .rigidbodysim-controls button {
@@ -154,7 +155,7 @@ end
 function Base.open(controls::SimulationControls, window::Window)
     size(window, 300, 55)
     title(window, "RigidBodySim controls")
-    body!(window, render_default(controls))
+    body!(window, render(controls))
     nothing
 end
 
@@ -172,6 +173,7 @@ CallbackSet(controls::SimulationControls) = CommandHandler(SimulationStatus(cont
 struct GUI
     visualizer::MechanismVisualizer
     controls::SimulationControls
+    usernode::Union{Node, Nothing}
 end
 
 """
@@ -179,7 +181,7 @@ Create a new RigidBodySim graphical user interface from a `MeshCatMechanisms.Mec
 
 Use `open(gui)` to open the GUI in a standalone window.
 """
-GUI(visualizer::MechanismVisualizer) = GUI(visualizer, SimulationControls())
+GUI(visualizer::MechanismVisualizer; usernode=nothing) = GUI(visualizer, SimulationControls(), usernode)
 
 """
 Create a new RigidBodySim graphical user interface for the given Mechanism.
@@ -187,16 +189,21 @@ All arguments are passed on to the `MeshCatMechanisms.MechanismVisualizer` const
 
 Use `open(gui)` to open the GUI in a standalone window.
 """
-GUI(mechanism::Mechanism, args...) = GUI(MechanismVisualizer(mechanism, args...))
+GUI(mechanism::Mechanism, args...; usernode=nothing) = GUI(MechanismVisualizer(mechanism, args...); usernode=usernode)
 
 function Base.open(gui::GUI, window::Window)
     title(window, "RigidBodySim")
-    body!(window, vbox(render_default(gui.controls), gui.visualizer.visualizer.core))
+    body = vbox(
+        WebIO.render(gui.controls),
+        WebIO.iframe(gui.visualizer.visualizer.core),
+        WebIO.render(gui.usernode)
+    )
+    body!(window, body)
     wait(gui)
     nothing
 end
 
-Base.open(gui::GUI) = open(gui, Window())
+Base.open(gui::GUI) = (window = Window(); open(gui, window); window)
 Base.wait(gui::GUI) = wait(gui.visualizer)
 
 """
