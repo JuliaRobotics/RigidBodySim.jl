@@ -181,7 +181,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Details",
     "title": "RigidBodySim.Visualization.GUI",
     "category": "type",
-    "text": "GUI(visualizer)\n\n\nCreate a new RigidBodySim graphical user interface from a MeshCatMechanisms.MechanismVisualizer.\n\nUse open(gui) to open the GUI in a standalone window.\n\n\n\n\n\nGUI(mechanism, args)\n\n\nCreate a new RigidBodySim graphical user interface for the given Mechanism. All arguments are passed on to the MeshCatMechanisms.MechanismVisualizer constructor.\n\nUse open(gui) to open the GUI in a standalone window.\n\n\n\n\n\n"
+    "text": "GUI(visualizer; usernode)\n\n\nCreate a new RigidBodySim graphical user interface from a MeshCatMechanisms.MechanismVisualizer.\n\nUse open(gui) to open the GUI in a standalone window.\n\n\n\n\n\nGUI(mechanism, args; usernode)\n\n\nCreate a new RigidBodySim graphical user interface for the given Mechanism. All arguments are passed on to the MeshCatMechanisms.MechanismVisualizer constructor.\n\nUse open(gui) to open the GUI in a standalone window.\n\n\n\n\n\n"
 },
 
 {
