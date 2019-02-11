@@ -76,7 +76,7 @@ function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAU
     DiscreteCallback(condition, action, initialize = initialize, save_positions=(false, false))
 end
 
-function TransformPublisher(vis::MechanismVisualizer; max_fps = 60.)
+function TransformPublisher(vis; max_fps = 60.)
     last_update_time = Ref(-Inf)
     condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
         function (u, t, integrator)
@@ -170,18 +170,24 @@ end
 
 CallbackSet(controls::SimulationControls) = CommandHandler(SimulationStatus(controls))
 
-struct GUI
-    visualizer::MechanismVisualizer
+struct GUI{V}
+    visualizer::V
     controls::SimulationControls
     usernode::Union{Node, Nothing}
 end
 
 """
-Create a new RigidBodySim graphical user interface from a `MeshCatMechanisms.MechanismVisualizer`.
+Create a new RigidBodySim graphical user interface given a visualizer (e.g. a `MeshCatMechanisms.MechanismVisualizer`).
+
+The visualizer must support:
+
+* `Base.copyto!(visualizer, state::Union{MechanismState, AbstractVector})`
+* `Base.wait(visualizer)`
+* `MeshCatMechanisms.visualizer(visualizer)`, which should return a `MeshCat.Visualizer`.
 
 Use `open(gui)` to open the GUI in a standalone window.
 """
-GUI(visualizer::MechanismVisualizer; usernode=nothing) = GUI(visualizer, SimulationControls(), usernode)
+GUI(visualizer; usernode=nothing) = GUI(visualizer, SimulationControls(), usernode)
 
 """
 Create a new RigidBodySim graphical user interface for the given Mechanism.
@@ -195,7 +201,7 @@ function Base.open(gui::GUI, window::Window)
     title(window, "RigidBodySim")
     body = vbox(
         WebIO.render(gui.controls),
-        WebIO.iframe(gui.visualizer.visualizer.core),
+        WebIO.iframe(MeshCatMechanisms.visualizer(gui.visualizer).core),
         WebIO.render(gui.usernode)
     )
     body!(window, body)
@@ -211,7 +217,7 @@ Create the DifferentialEquations.jl callbacks associated with the [`GUI`](@ref).
 
 `max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
 """
-CallbackSet(gui::GUI; max_fps=60) = CallbackSet(CallbackSet(gui.controls), CallbackSet(gui.visualizer; max_fps = max_fps))
+CallbackSet(gui::GUI; max_fps=60) = CallbackSet(CallbackSet(gui.controls), TransformPublisher(gui.visualizer; max_fps = max_fps))
 
 @deprecate CallbackSet(vis, state::MechanismState; max_fps = 60.) CallbackSet(vis; max_fps = max_fps)
 
