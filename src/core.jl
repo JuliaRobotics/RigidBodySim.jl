@@ -39,7 +39,6 @@ using RigidBodyDynamics:
     ranges
 
 import DiffEqDiffTools
-import ForwardDiff
 
 """
 A 'zero' controller, i.e. one that sets all control torques to zero at all times.
@@ -87,14 +86,6 @@ function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t::T
     ẋ
 end
 
-# Disable ForwardDiff tag mechanism to work around https://github.com/JuliaDiff/ForwardDiff.jl/issues/267
-# The Tag type becomes too complicated due to the TypeSortedCollection type parameter, resulting in inference issues
-ForwardDiff.Tag(::DiffEqDiffTools.TimeGradientWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
-ForwardDiff.Tag(::DiffEqDiffTools.UJacobianWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
-ForwardDiff.Tag(::DiffEqDiffTools.TimeDerivativeWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
-ForwardDiff.Tag(::DiffEqDiffTools.UDerivativeWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
-ForwardDiff.Tag(::DiffEqDiffTools.ParamJacobianWrapper{<:Dynamics}, ::Type{V}) where {V} = nothing
-
 """
 Can be used to create a callback associated with a given controller.
 """
@@ -116,10 +107,6 @@ function ODEProblem(dynamics::Dynamics, x0::Union{AbstractVector, MechanismState
     callbacks = CallbackSet(controlcallback(dynamics.control!), callback)
     ODEProblem{true}(dynamics, Vector(x0), tspan, p; callback = callbacks, kwargs...)
 end
-
-Base.@deprecate(ODEProblem(state::MechanismState, tspan, control! = zero_control!; callback = nothing),
-    ODEProblem(Dynamics(state.mechanism, control!), state, tspan; callback = callback)
-)
 
 """
 `configuration_renormalizer` can be used to create a callback that projects the configuration
