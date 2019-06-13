@@ -4,7 +4,6 @@ version = "1.2.0"
 
 [deps]
 Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
-CSSUtil = "70588ee8-6100-5070-97c1-3cb50ed05fe8"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 DiffEqBase = "2b5f629d-d688-5b77-993f-72d75c75574e"
 DiffEqCallbacks = "459566f4-90b8-5000-8ac3-15dfb0a30def"
@@ -44,3 +43,4 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["GR", "NBInclude", "LinearAlgebra", "Test", "Plots", "Random", "Measurements", "MechanismGeometries"]
+
