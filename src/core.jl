@@ -38,8 +38,6 @@ using RigidBodyDynamics:
     configuration_derivative!, dynamics!,
     ranges
 
-import DiffEqDiffTools
-
 """
 A 'zero' controller, i.e. one that sets all control torques to zero at all times.
 """
