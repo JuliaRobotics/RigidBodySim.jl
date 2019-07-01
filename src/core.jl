@@ -38,15 +38,23 @@ using RigidBodyDynamics:
     configuration_derivative!, dynamics!,
     ranges
 
+using RigidBodyDynamics.Contact:
+    ContactModel,
+    SoftContactState,
+    SoftContactResult,
+    contact_dynamics!
+
 """
 A 'zero' controller, i.e. one that sets all control torques to zero at all times.
 """
 zero_control!(τ::AbstractVector, t, state) = τ .= 0
 
-struct Dynamics{M, JointCollection, C, P}
+struct Dynamics{M, JointCollection, C, P, CS, CR}
     statecache::StateCache{M, JointCollection}
     τcache::SegmentedVectorCache{JointID, Base.OneTo{JointID}}
     resultcache::DynamicsResultCache{M}
+    contact_state::CS
+    contact_result::CR
     control!::C
     setparams!::P
 end
@@ -61,28 +69,54 @@ By default, `control!` is [`zero_control!`](@ref) (resulting in the passive dyna
 The `setparams!` keyword argument is a callable with the signature `setparams!(state, p)` where `state` is a
 `MechanismState` and `p` is a vector of parameters, as used in OrdinaryDiffEq.jl.
 """
-function Dynamics(mechanism::Mechanism, control! = zero_control!; setparams! = (state, p) -> nothing)
+function Dynamics(mechanism::Mechanism, control! = zero_control!; setparams! = (state, p) -> nothing, contact_model::Union{ContactModel, Nothing} = nothing)
     vranges = let state = MechanismState(mechanism) # just to get velocity ranges; TODO: consider adding method that creates this from a Mechanism
         ranges(velocity(state))
     end
-    Dynamics(StateCache(mechanism), SegmentedVectorCache(vranges), DynamicsResultCache(mechanism), control!, setparams!)
+    if contact_model === nothing
+        contact_state = nothing
+        contact_result = nothing
+    else
+        contact_state = SoftContactState{Float64}(contact_model)
+        contact_result = SoftContactResult{Float64}(mechanism, contact_model)
+    end
+    Dynamics(StateCache(mechanism), SegmentedVectorCache(vranges), DynamicsResultCache(mechanism), contact_state, contact_result, control!, setparams!)
 end
 
 Base.@pure cachevartype(::Type{<:MechanismState{<:Any, <:Any, C}}) where {C} = C
 
 function (dynamics::Dynamics)(ẋ::AbstractVector, x::AbstractVector{X}, p, t::T) where {X, T}
+    has_contact = dynamics.contact_state !== nothing
     state = dynamics.statecache[X]
+    nq = num_positions(state)
+    nv = num_velocities(state)
     C = cachevartype(typeof(state))
     Tau = promote_type(T, C)
     τ = dynamics.τcache[Tau]
     result = dynamics.resultcache[Tau]
-    copyto!(state, x)
+    if has_contact
+        copyto!(state, view(x, 1 : nq + nv))
+        copyto!(dynamics.contact_state.x, view(x, nq + nv + 1 : length(x)))
+    else
+        copyto!(state, x)
+    end
     dynamics.setparams!(state, p)
     dynamics.control!(τ, t, state)
-    dynamics!(result, state, τ)
-    copyto!(ẋ, result)
+    if dynamics.contact_state !== nothing
+        contact_dynamics!(dynamics.contact_result, dynamics.contact_state, state)
+        dynamics!(result, state, τ, dynamics.contact_result.wrenches)
+        copyto!(view(ẋ, 1 : nq + nv), result)
+        copyto!(view(ẋ, nq + nv + 1 : length(ẋ)), dynamics.contact_result.ẋ)
+    else
+        dynamics!(result, state, τ)
+        copyto!(ẋ, result)
+    end
     ẋ
 end
+
+vectorize(x::AbstractVector) = x
+vectorize(x::MechanismState) = Vector(x)
+vectorize(x::Tuple{<:MechanismState, <:SoftContactState}) = [Vector(x[1]); x[2].x]
 
 """
 Can be used to create a callback associated with a given controller.
@@ -100,10 +134,10 @@ or an `AbstractVector` containing the initial state represented as `[q; v; s]`, 
 The `callback` keyword argument can be used to pass in additional [DifferentialEquations.jl callbacks]
 (http://docs.juliadiffeq.org/stable/features/callback_functions.html#Using-Callbacks-1).
 """
-function ODEProblem(dynamics::Dynamics, x0::Union{AbstractVector, MechanismState}, tspan, p = nothing;
+function ODEProblem(dynamics::Dynamics, x0, tspan, p = nothing;
         callback = nothing, kwargs...)
     callbacks = CallbackSet(controlcallback(dynamics.control!), callback)
-    ODEProblem{true}(dynamics, Vector(x0), tspan, p; callback = callbacks, kwargs...)
+    ODEProblem{true}(dynamics, Vector(vectorize(x0)), tspan, p; callback = callbacks, kwargs...)
 end
 
 """

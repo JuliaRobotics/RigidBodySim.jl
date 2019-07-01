@@ -27,14 +27,18 @@ import WebIO
 
 using Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
-using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration, num_positions
+using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
+using RigidBodyDynamics: num_positions, num_velocities
 using MeshCat: Animation, atframe, setanimation!
+using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
 using WebIO: render, node, Node
 using Blink: Window, body!, title
 
 using DataStructures: top
+
+mechanism_visualizer(vis::MechanismVisualizer) = vis
 
 struct SimulationStatus
     terminate::Observable{Bool}
@@ -78,10 +82,12 @@ function TransformPublisher(vis; max_fps = 60.)
             last_time_step || time() - last_update_time[] >= min_Δt
         end
     end
-    action = let vis = vis, last_update_time = last_update_time
+    mvis = mechanism_visualizer(vis)
+    num_states = num_positions(mvis.state) + num_velocities(mvis.state)
+    action = let vis = vis, last_update_time = last_update_time, num_states = num_states
         function (integrator)
             last_update_time[] = time()
-            copyto!(vis, integrator.u)
+            copyto!(vis, view(integrator.u, 1 : num_states))
             u_modified!(integrator, false)
         end
     end
@@ -192,7 +198,7 @@ function Base.open(gui::GUI, window::Window)
     title(window, "RigidBodySim")
     body = node(:div,
         WebIO.render(gui.controls),
-        WebIO.iframe(MeshCatMechanisms.visualizer(gui.visualizer).core, minHeight="0"),
+        WebIO.iframe(MeshCatMechanisms.visualizer(mechanism_visualizer(gui.visualizer)).core, minHeight="0"),
         WebIO.render(gui.usernode),
         style = Dict(:display => "flex", :flexDirection => "column", :height => "100vh")
     )
