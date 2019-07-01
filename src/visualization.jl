@@ -27,6 +27,7 @@ import WebIO
 using Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
+using RigidBodyDynamics: num_positions, num_velocities
 using MeshCatMechanisms: setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
@@ -77,10 +78,10 @@ function TransformPublisher(vis; max_fps = 60.)
             last_time_step || time() - last_update_time[] >= min_Δt
         end
     end
-    action = let vis = vis, last_update_time = last_update_time
+    action = let vis = vis, last_update_time = last_update_time, nqv = num_positions(vis.state) + num_velocities(vis.state)
         function (integrator)
             last_update_time[] = time()
-            copyto!(vis, integrator.u)
+            copyto!(vis, view(integrator.u, 1 : nqv))
             u_modified!(integrator, false)
         end
     end
@@ -265,7 +266,7 @@ function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolut
     qs = let state = vis.state, sol = sol
         map(ts) do t
             x = sol(t)
-            copyto!(state, x)
+            copyto!(state, view(x, 1 : num_positions(state) + num_velocities(state)))
             normalize_configuration!(state)
             copy(configuration(state))
         end
