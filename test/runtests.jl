@@ -44,7 +44,7 @@ end
     x0 = Vector(state)
     final_time = 5.
     problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol = solve(problem, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     copyto!(state, x0)
     ts, qs, vs = RigidBodyDynamics.simulate(state, final_time)
     @test [qs[end]; vs[end]] ≈ sol[end] atol = 1e-2
@@ -59,7 +59,7 @@ end
     @test !RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
 
     problem = ODEProblem(Dynamics(mechanism), state, (0., 1e-3))
-    sol = solve(problem, Vern7(), dt = 1e-4, callback = configuration_renormalizer(state))
+    sol = solve(problem, Tsit5(), dt = 1e-4, callback = configuration_renormalizer(state))
 
     copyto!(state, sol[end])
     @test RigidBodyDynamics.is_configuration_normalized(floatingjoint, configuration(state, floatingjoint))
@@ -110,19 +110,19 @@ end
 
     # ensure that we can solve the same problem again without errors and with a different integrator
     empty!(controltimes)
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol = solve(problem, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 
     # issue #60
     empty!(controltimes)
     problem60 = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time))
-    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     controller = controller = make_controller()
     problem60 = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time))
-    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     problem60_fixed = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time),
         callback = PeriodicCallback(controller))
-    sol60 = solve(problem60_fixed, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol60 = solve(problem60_fixed, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
     @test sol60.t == sol.t
     @test sol60.u == sol.u
@@ -238,7 +238,7 @@ end
 
     final_time = 5.
     problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
-    sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol = solve(problem, Tsit5(), abs_tol = 1e-10, dt = 0.05)
 
     # regular playback
     realtime_rate = 2.
@@ -286,7 +286,7 @@ end
     final_time = 1.
     problem = ODEProblem(Dynamics(mechanism), state, (0., final_time))
 
-    sol_nonstiff = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    sol_nonstiff = solve(problem, Tsit5(), abs_tol = 1e-10, dt = 0.05)
     sol_stiff = solve(problem, Rodas4P(), abs_tol = 1e-10, dt = 0.05)
     @test last(sol_nonstiff) ≈ last(sol_stiff) atol = 1e-2
 end
