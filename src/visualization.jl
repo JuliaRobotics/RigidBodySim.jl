@@ -208,7 +208,9 @@ Create the DifferentialEquations.jl callbacks associated with the [`GUI`](@ref).
 
 `max_fps` is the maximum number of frames per second (in terms of wall time) to draw. Default: `60.0`.
 """
-CallbackSet(gui::GUI; max_fps=60) = CallbackSet(CallbackSet(gui.controls), TransformPublisher(gui.visualizer; max_fps = max_fps))
+function CallbackSet(gui::GUI; max_fps=60)
+    CallbackSet(CallbackSet(gui.controls), TransformPublisher(MeshCatMechanisms.visualizer(gui.visualizer); max_fps = max_fps))
+end
 
 """
 Create the DifferentialEquations.jl callbacks needed for publishing to a
