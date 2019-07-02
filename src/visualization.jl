@@ -26,6 +26,7 @@ import WebIO
 
 using Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
+using DiffEqCallbacks: PeriodicCallback
 using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
 using MeshCatMechanisms: setanimation!
 using Observables: Observable
@@ -69,22 +70,52 @@ function CommandHandler(status::SimulationStatus; pause_pollint::Float64 = DEFAU
     DiscreteCallback(condition, action, initialize = initialize, save_positions=(false, false))
 end
 
-function TransformPublisher(vis; max_fps = 60.)
-    last_update_time = Ref(-Inf)
-    condition = let last_update_time = last_update_time, min_Δt = 1 / max_fps
-        function (u, t, integrator)
-            last_time_step = length(integrator.opts.tstops) == 1 && t == top(integrator.opts.tstops)
-            last_time_step || time() - last_update_time[] >= min_Δt
-        end
-    end
-    action = let vis = vis, last_update_time = last_update_time
+mutable struct RealtimeRateLimiterState
+    simtime0::Float64
+    walltime0::Float64
+    reset::Bool
+    RealtimeRateLimiterState() = new(0.0, 0.0, true)
+end
+
+# TODO: max_fps is weird because PeriodicCallbacks can cause dtmin trip
+function TransformPublisher(vis; max_fps = 20 * pi, max_rate = 1., save_positions = (false, false), reset_interval = 1.0)
+    max_rate = 2.
+    max_fps = 20 * pi
+    poll_interval = max_rate / max_fps
+    @show poll_interval
+    state = RealtimeRateLimiterState()
+    limit_rate = let vis = vis, state = state, max_rate = max_rate # https://github.com/JuliaLang/julia/issues/15276
         function (integrator)
-            last_update_time[] = time()
             copyto!(vis, integrator.u)
+            simtime = integrator.t
+            if state.reset
+                state.simtime0 = simtime
+                state.walltime0 = time()
+                state.reset = false
+            else
+                Δsimtime = simtime - state.simtime0
+                minΔwalltime = Δsimtime / max_rate
+                Δwalltime = time() - state.walltime0
+                sleeptime = minΔwalltime - Δwalltime
+                if sleeptime > 1e-3 # minimum time for `sleep` function
+                    sleep(sleeptime)
+                end
+                if Δwalltime > reset_interval
+                    # Reset every once in a while. If we don't do this, a slowdown in simulation
+                    # rate at some point will cause the maximum rate to not be enforced until the
+                    # simulation catches up. Don't do this too often to get more accurate results
+                    # (drift doesn't accumulate as quickly).
+                    state.simtime0 = simtime
+                    state.walltime0 = time()
+                end
+            end
             u_modified!(integrator, false)
         end
     end
-    DiscreteCallback(condition, action; save_positions = (false, false))
+    initialize = let state = state
+        (c, u, t, integrator) -> (state.reset = true)
+    end
+    PeriodicCallback(limit_rate, poll_interval / max_rate; initialize = initialize, save_positions = save_positions)
 end
 
 struct SimulationControls
