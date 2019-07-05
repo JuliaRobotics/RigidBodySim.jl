@@ -22,6 +22,7 @@ using DocStringExtensions
 
 import DiffEqBase
 import RigidBodyDynamics
+import RigidBodyDynamics.Contact
 
 using DiffEqBase:
     ODEProblem, DiscreteCallback, u_modified!, CallbackSet
@@ -137,6 +138,7 @@ The `callback` keyword argument can be used to pass in additional [DifferentialE
 function ODEProblem(dynamics::Dynamics, x0, tspan, p = nothing;
         callback = nothing, kwargs...)
     callbacks = CallbackSet(controlcallback(dynamics.control!), callback)
+    Contact.reset!(dynamics.contact_state) # FIXME: don't do this here.
     ODEProblem{true}(dynamics, Vector(vectorize(x0)), tspan, p; callback = callbacks, kwargs...)
 end
 
