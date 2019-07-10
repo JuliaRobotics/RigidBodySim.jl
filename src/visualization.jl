@@ -6,8 +6,6 @@ export
     GUI,
     setanimation!
 
-using MeshCatMechanisms
-
 using DocStringExtensions
 @template (FUNCTIONS, METHODS, MACROS) =
     """
@@ -21,13 +19,16 @@ using DocStringExtensions
     $(DOCSTRING)
     """
 
-import MeshCatMechanisms
+
+using MeshCatMechanisms
+
+import MeshCat
 import WebIO
 
 using Printf: @sprintf
 using DiffEqBase: DiscreteCallback, ODESolution, CallbackSet, u_modified!, terminate!
-using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration
-using MeshCatMechanisms: setanimation!
+using RigidBodyDynamics: Mechanism, MechanismState, normalize_configuration!, configuration, num_positions
+using MeshCat: Animation, atframe, setanimation!
 using Observables: Observable
 using InteractBase: Widget, button, observe
 using WebIO: render, node, Node
@@ -218,6 +219,38 @@ visualizer during simulation.
 """
 CallbackSet(vis::MechanismVisualizer; max_fps = 60.) = CallbackSet(TransformPublisher(vis; max_fps = max_fps))
 
+
+"""
+Create a `MeshCat.Animation` from an `ODESolution` obtained by `solve!`ing an
+`ODEProblem` created using this package.
+
+* `vis` is a `MeshCatMechanisms.MechanismVisualizer`
+* `sol` is a `DiffEqBase.ODESolution` obtained from a RigidBodySim.jl simulation.
+
+Keyword arguments:
+
+* `fps`: the frame rate to be used for keyframes.
+* `realtime_rate`: can be used to slow down or speed up playback compared to wall time. A `realtime_rate` of `2`
+  will result in playback that is sped up 2x. Default: `1`.
+"""
+function MeshCat.Animation(mvis::MechanismVisualizer, sol::ODESolution; fps::Number=30, realtime_rate::Number=1)
+    t0, tf = first(sol.t), last(sol.t)
+    animation = Animation()
+    # MeshCat animations don't support a realtime_rate option
+    # (although it can be adjusted in the GUI), so we instead just
+    # do some fps scaling.
+    num_frames = floor(Int, (tf - t0) * fps / realtime_rate)
+    for frame in 0 : num_frames
+        time = t0 + frame * realtime_rate / fps
+        u = sol(time)
+        q = view(u, 1 : num_positions(mvis.state)) # TODO: make nicer
+        atframe(animation, MeshCatMechanisms.visualizer(mvis), frame) do frame_vis
+            set_configuration!(MechanismVisualizer(mvis.state, frame_vis), q)
+        end
+    end
+    return animation
+end
+
 """
 Play back a visualization of a RigidBodySim.jl simulation.
 
@@ -252,28 +285,19 @@ setanimation!(vis, sol; realtime_rate = 0.5);
 
 ```
 """
-function MeshCatMechanisms.setanimation!(vis::MechanismVisualizer, sol::ODESolution;
+function MeshCat.setanimation!(mvis::MechanismVisualizer, sol::ODESolution;
         max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = nothing)
+    # TODO: deprecate.
     if pause_pollint !== nothing
         warn("pause_pollint is no longer used. You can control the animation directly from the visualizer.")
     end
     @assert max_fps > 0
     @assert 0 < realtime_rate < Inf
-    t0, tf = first(sol.t), last(sol.t)
-    numframes = max(round(Int, (tf - t0) * max_fps + 1), 2) # need at least two frames to do the interpolation
-    ts = range(t0, stop=tf, length=numframes)
-    qs = let state = vis.state, sol = sol
-        map(ts) do t
-            x = sol(t)
-            copyto!(state, x)
-            normalize_configuration!(state)
-            copy(configuration(state))
-        end
-    end
-    # MeshCat animations currently don't support a realtime_rate option
-    # (although it can be adjusted in the GUI), so we instead just scale
-    # the times
-    setanimation!(vis, ts / realtime_rate, qs)
+    q0 = view(sol[1], 1 : num_positions(mvis.state)) # TODO: make nicer
+    animation = MeshCat.Animation(mvis, sol; fps=max_fps, realtime_rate=realtime_rate)
+    MeshCat.setanimation!(MeshCatMechanisms.visualizer(mvis), animation)
+    set_configuration!(mvis.state, q0)
+    nothing
 end
 
 end # module
