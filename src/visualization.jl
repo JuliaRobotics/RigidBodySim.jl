@@ -235,7 +235,7 @@ Keyword arguments:
 """
 function MeshCat.Animation(mvis::MechanismVisualizer, sol::ODESolution; fps::Number=30, realtime_rate::Number=1)
     t0, tf = first(sol.t), last(sol.t)
-    animation = Animation()
+    animation = Animation(fps)
     # MeshCat animations don't support a realtime_rate option
     # (although it can be adjusted in the GUI), so we instead just
     # do some fps scaling.
