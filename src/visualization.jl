@@ -233,7 +233,7 @@ Keyword arguments:
 * `realtime_rate`: can be used to slow down or speed up playback compared to wall time. A `realtime_rate` of `2`
   will result in playback that is sped up 2x. Default: `1`.
 """
-function MeshCat.Animation(mvis::MechanismVisualizer, sol::ODESolution; fps::Number=30, realtime_rate::Number=1)
+function MeshCat.Animation(mvis::MechanismVisualizer, sol::ODESolution; fps::Int=30, realtime_rate::Number=1)
     t0, tf = first(sol.t), last(sol.t)
     animation = Animation(fps)
     # MeshCat animations don't support a realtime_rate option
@@ -261,7 +261,7 @@ Positional arguments:
 
 `setanimation` accepts the following keyword arguments:
 
-* `max_fps`: the maximum number of frames per second to draw. Default: `60.0`.
+* `max_fps`: the maximum number of frames per second to draw. Default: `60`.
 * `realtime_rate`: can be used to slow down or speed up playback compared to wall time. A `realtime_rate` of `2`
   will result in playback that is sped up 2x. Default: `1.0`.
 
@@ -286,7 +286,7 @@ setanimation!(vis, sol; realtime_rate = 0.5);
 ```
 """
 function MeshCat.setanimation!(mvis::MechanismVisualizer, sol::ODESolution;
-        max_fps::Number = 60., realtime_rate::Number = 1., pause_pollint = nothing)
+        max_fps::Int = 60, realtime_rate::Number = 1., pause_pollint = nothing)
     # TODO: deprecate.
     if pause_pollint !== nothing
         warn("pause_pollint is no longer used. You can control the animation directly from the visualizer.")
