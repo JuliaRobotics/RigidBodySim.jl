@@ -244,8 +244,8 @@ function MeshCat.Animation(mvis::MechanismVisualizer, sol::ODESolution; fps::Num
         time = t0 + frame * realtime_rate / fps
         u = sol(time)
         q = view(u, 1 : num_positions(mvis.state)) # TODO: make nicer
-        atframe(animation, MeshCatMechanisms.visualizer(mvis), frame) do frame_vis
-            set_configuration!(MechanismVisualizer(mvis.state, frame_vis), q)
+        atframe(animation, frame) do
+            set_configuration!(mvis, q)
         end
     end
     return animation
