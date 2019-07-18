@@ -242,7 +242,7 @@ end
 
     # regular playback
     realtime_rate = 2.
-    setanimation!(vis, sol, realtime_rate = realtime_rate, max_fps = 60.)
+    setanimation!(vis, sol, realtime_rate = realtime_rate, max_fps = 60)
     sleep(final_time / realtime_rate)
 
     # broken:
