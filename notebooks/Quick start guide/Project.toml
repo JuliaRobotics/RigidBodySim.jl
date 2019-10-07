@@ -1,2 +1,5 @@
 [deps]
+Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
+MechanismGeometries = "931e9471-e8fb-5385-a477-07ad12718aca"
+RigidBodyDynamics = "366cf18f-59d5-5db9-a4de-86a9f6786172"
 RigidBodySim = "e61f16d8-a6b7-5689-8d03-627c2b27ebce"
