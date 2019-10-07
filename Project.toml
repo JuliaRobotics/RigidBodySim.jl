@@ -36,9 +36,10 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Measurements = "eff96d63-e80a-5855-80a2-b1b0885c5ab7"
 MechanismGeometries = "931e9471-e8fb-5385-a477-07ad12718aca"
 NBInclude = "0db19996-df87-5ea3-a455-e3a50d440464"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["GR", "NBInclude", "LinearAlgebra", "Test", "Plots", "Random", "Measurements", "MechanismGeometries"]
+test = ["GR", "NBInclude", "LinearAlgebra", "Test", "Pkg", "Plots", "Random", "Measurements", "MechanismGeometries"]
