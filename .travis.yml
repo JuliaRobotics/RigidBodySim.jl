@@ -4,7 +4,7 @@ os:
   - osx
 julia:
   - 1.0
-  - 1.1
+  - 1.2
   - nightly
 matrix:
   allow_failures:
@@ -16,13 +16,13 @@ branches:
 notifications:
   email: false
 after_success:
-  - if [[ $TRAVIS_JULIA_VERSION = 1.1 ]]; then
+  - if [[ $TRAVIS_JULIA_VERSION = 1.2 ]]; then
       julia --project -e 'using Pkg; pkg"add Coverage"; using Coverage; Codecov.submit(Codecov.process_folder())';
     fi
 jobs:
   include:
     - stage: Documentation
-      julia: 1.1
+      julia: 1.2
       os: linux
       script:
         - julia --project=docs -e 'using Pkg; Pkg.instantiate()'
