@@ -110,16 +110,18 @@ end
 
     # ensure that we can solve the same problem again without errors and with a different integrator
     empty!(controltimes)
+    controller.index[] = -1
     sol = solve(problem, Vern7(), abs_tol = 1e-10, dt = 0.05)
     @test controltimes == collect(0. : Δt : final_time - rem(final_time, Δt))
 
     # issue #60
     empty!(controltimes)
+    controller.index[] = -1
     problem60 = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time))
     @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05)
     controller = controller = make_controller()
     problem60 = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time))
-    @test_throws RigidBodySim.Control.PeriodicControlFailure solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05)
+    @test 0.25 ∉ solve(problem60, Vern7(), abs_tol = 1e-10, dt = 0.05).t
     problem60_fixed = ODEProblem(Dynamics(mechanism, (τ, t, state) -> controller(τ, t, state)), state, (0., final_time),
         callback = PeriodicCallback(controller))
     sol60 = solve(problem60_fixed, Vern7(), abs_tol = 1e-10, dt = 0.05)
