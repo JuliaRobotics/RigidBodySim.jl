@@ -113,7 +113,7 @@ function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
         function (integrator)
             controller.docontrol[] = true
             controller.index[] += 1
-            u_modified!(integrator, false) # see https://github.com/JuliaRobotics/RigidBodySim.jl/pull/126
+            u_modified!(integrator, true) # see https://github.com/JuliaRobotics/RigidBodySim.jl/pull/126
         end
     end
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
