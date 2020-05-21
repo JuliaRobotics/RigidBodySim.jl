@@ -92,12 +92,12 @@ struct PeriodicController{Tau<:AbstractVector, T<:Number, C, I}
     initialize::I
     save_positions::Tuple{Bool, Bool}
     docontrol::Base.RefValue{Bool}
-    last_control_time::Base.RefValue{T} # only used for checking that PeriodicCallback is correctly set up
-
+    start_time::Base.RefValue{T} # only used for checking that PeriodicCallback is correctly set up
+    index::Base.RefValue{Int}
     function PeriodicController(τ::Tau, Δt::T, control!::C;
             initialize::I = DiffEqBase.INITIALIZE_DEFAULT,
             save_positions = (false, false)) where {Tau<:AbstractVector, T<:Number, C, I}
-        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(true), Ref(T(NaN)))
+        new{Tau, T, C, I}(τ, Δt, control!, initialize, save_positions, Ref(true), Ref(T(NaN)), Ref(-1))
     end
 end
 
@@ -105,14 +105,15 @@ function DiffEqCallbacks.PeriodicCallback(controller::PeriodicController)
     periodic_initialize = let controller = controller
         function (c, u, t, integrator)
             controller.docontrol[] = true
-            controller.last_control_time[] = NaN
+            controller.start_time[] = t
             controller.initialize(c, u, t, integrator)
         end
     end
     f = let controller = controller
         function (integrator)
             controller.docontrol[] = true
-            u_modified!(integrator, true) # see https://github.com/JuliaRobotics/RigidBodySim.jl/pull/72#issuecomment-408911804
+            controller.index[] += 1
+            u_modified!(integrator, true) # see https://github.com/JuliaRobotics/RigidBodySim.jl/pull/126
         end
     end
     PeriodicCallback(f, controller.Δt; initialize = periodic_initialize, save_positions = controller.save_positions)
@@ -142,11 +143,12 @@ function (controller::PeriodicController)(τ::AbstractVector, t, state)
     if controller.docontrol[]
         controller.control!(controller.τ, t, state)
         controller.docontrol[] = false
-        controller.last_control_time[] = t
     end
     copyto!(τ, controller.τ)
-    if t > controller.last_control_time[] + controller.Δt || t < controller.last_control_time[]
-        throw(PeriodicControlFailure(controller.Δt, t, controller.last_control_time[]))
+    last_control_time = controller.start_time[] + controller.index[] * controller.Δt
+    next_control_time = controller.start_time[] + (controller.index[]+1) * controller.Δt
+    if t > next_control_time || t < last_control_time
+        throw(PeriodicControlFailure(controller.Δt, t, last_control_time))
     end
     τ
 end
